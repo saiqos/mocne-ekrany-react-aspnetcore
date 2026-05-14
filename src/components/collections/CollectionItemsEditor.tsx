@@ -107,6 +107,7 @@ export const CollectionItemsEditor = ({
               sx={{ display: 'flex', gap: 1, mb: 2, flexDirection: 'column' }}
             >
               <Autocomplete
+                sx={{ mt: 1 }}
                 options={images}
                 getOptionLabel={(option) => option.name}
                 value={images.find((i) => i.id === selectedImageId) || null}
@@ -122,6 +123,7 @@ export const CollectionItemsEditor = ({
               />
 
               <TextField
+                sx={{ mt: 2 }}
                 label="Display Duration (seconds)"
                 type="number"
                 size="small"
@@ -132,6 +134,7 @@ export const CollectionItemsEditor = ({
               />
 
               <Button
+                sx={{ mt: 1 }}
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={handleAddItem}

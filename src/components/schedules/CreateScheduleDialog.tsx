@@ -14,6 +14,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { useSchedules } from '../../hooks/useSchedules';
@@ -160,53 +161,93 @@ export const CreateScheduleDialog = ({
           />
 
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <TextField
-              label="Start Date"
-              type="date"
-              value={formData.startDate}
-              onChange={(e) =>
-                setFormData({ ...formData, startDate: e.target.value })
-              }
-              error={!!errors.startDate}
-              helperText={errors.startDate}
-              InputLabelProps={{ shrink: true }}
-              disabled={isCreating}
-            />
-            <TextField
-              label="Start Time"
-              type="time"
-              value={formData.startTime}
-              onChange={(e) =>
-                setFormData({ ...formData, startTime: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              disabled={isCreating}
-            />
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', mb: 1, fontWeight: 500 }}
+              >
+                Start Date
+              </Typography>
+              <TextField
+                type="date"
+                value={formData.startDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, startDate: e.target.value })
+                }
+                error={!!errors.startDate}
+                helperText={errors.startDate}
+                InputLabelProps={{ shrink: true }}
+                disabled={isCreating}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+            </Box>
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', mb: 1, fontWeight: 500 }}
+              >
+                Start Time
+              </Typography>
+              <TextField
+                type="time"
+                value={formData.startTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                disabled={isCreating}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+            </Box>
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <TextField
-              label="End Date"
-              type="date"
-              value={formData.endDate}
-              onChange={(e) =>
-                setFormData({ ...formData, endDate: e.target.value })
-              }
-              error={!!errors.endDate}
-              helperText={errors.endDate}
-              InputLabelProps={{ shrink: true }}
-              disabled={isCreating}
-            />
-            <TextField
-              label="End Time"
-              type="time"
-              value={formData.endTime}
-              onChange={(e) =>
-                setFormData({ ...formData, endTime: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              disabled={isCreating}
-            />
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', mb: 1, fontWeight: 500 }}
+              >
+                End Date
+              </Typography>
+              <TextField
+                type="date"
+                value={formData.endDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, endDate: e.target.value })
+                }
+                error={!!errors.endDate}
+                helperText={errors.endDate}
+                InputLabelProps={{ shrink: true }}
+                disabled={isCreating}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+            </Box>
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', mb: 1, fontWeight: 500 }}
+              >
+                End Time
+              </Typography>
+              <TextField
+                type="time"
+                value={formData.endTime}
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                disabled={isCreating}
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+            </Box>
           </Box>
 
           <FormControl fullWidth>
