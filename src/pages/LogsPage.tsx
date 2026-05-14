@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { LogTable } from '../components/logs/LogsTable';
+import { TableWithLogs } from '../components/logs/TableWithLogs';
 
 export const LogsPage = () => {
   return (
@@ -7,7 +7,7 @@ export const LogsPage = () => {
       <Typography variant="h4" sx={{ mb: 3 }}>
         Audit Logs
       </Typography>
-      <LogTable />
+      <TableWithLogs />
     </Box>
   );
 };
