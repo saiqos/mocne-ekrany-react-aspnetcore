@@ -60,7 +60,7 @@ export const ImageCard = ({
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            mb: 1,
+            marginBottom: 1,
           }}
         >
           {image.name}
@@ -77,7 +77,7 @@ export const ImageCard = ({
         <Typography
           variant="caption"
           color="textSecondary"
-          sx={{ display: 'block', mt: 1 }}
+          sx={{ display: 'block', marginTop: 1 }}
         >
           By: {image.uploadedBy}
         </Typography>

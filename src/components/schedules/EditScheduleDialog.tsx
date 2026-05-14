@@ -196,7 +196,6 @@ export const EditScheduleDialog = ({
               }
               error={!!errors.startDate}
               helperText={errors.startDate}
-              InputLabelProps={{ shrink: true }}
               disabled={isUpdating}
             />
             <TextField
@@ -206,7 +205,6 @@ export const EditScheduleDialog = ({
               onChange={(e) =>
                 setFormData({ ...formData, startTime: e.target.value })
               }
-              InputLabelProps={{ shrink: true }}
               disabled={isUpdating}
             />
           </Box>
@@ -221,7 +219,6 @@ export const EditScheduleDialog = ({
               }
               error={!!errors.endDate}
               helperText={errors.endDate}
-              InputLabelProps={{ shrink: true }}
               disabled={isUpdating}
             />
             <TextField
@@ -231,7 +228,6 @@ export const EditScheduleDialog = ({
               onChange={(e) =>
                 setFormData({ ...formData, endTime: e.target.value })
               }
-              InputLabelProps={{ shrink: true }}
               disabled={isUpdating}
             />
           </Box>

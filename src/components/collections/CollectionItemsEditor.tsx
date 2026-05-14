@@ -16,7 +16,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { useCollections } from '../../hooks/useCollections';
@@ -41,7 +41,7 @@ export const CollectionItemsEditor = ({
   const [displayDuration, setDisplayDuration] = useState('30');
 
   // Инициализируем items при открытии
-  React.useEffect(() => {
+  useEffect(() => {
     if (collection && open) {
       setItems(collection.items || []);
       setSelectedImageId(null);
@@ -99,7 +99,7 @@ export const CollectionItemsEditor = ({
         <Box sx={{ pt: 2 }}>
           {/* Добавление новых items */}
           <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f9f9f9' }}>
-            <Typography variant="subtitle2" sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ marginBottom: 2 }}>
               Add Images to Collection
             </Typography>
 
@@ -130,7 +130,6 @@ export const CollectionItemsEditor = ({
                 value={displayDuration}
                 onChange={(e) => setDisplayDuration(e.target.value)}
                 disabled={isUpdating}
-                inputProps={{ min: 1, max: 300 }}
               />
 
               <Button
@@ -147,7 +146,7 @@ export const CollectionItemsEditor = ({
           </Paper>
 
           {/* Список items */}
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+          <Typography variant="subtitle2" sx={{ marginBottom: 1 }}>
             Items ({items.length})
           </Typography>
 

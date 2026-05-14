@@ -42,7 +42,7 @@ export const DeleteImageDialog = ({
         </Typography>
         <Typography
           variant="caption"
-          sx={{ display: 'block', mt: 1, color: '#666' }}
+          sx={{ display: 'block', marginTop: 1, color: '#666' }}
         >
           This action cannot be undone.
         </Typography>

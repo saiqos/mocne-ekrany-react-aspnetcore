@@ -48,7 +48,7 @@ export const ImagesPage = () => {
         ) : (
           <Grid container spacing={2}>
             {images.map((image) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
+              <Grid item size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={image.id}>
                 <ImageCard
                   image={image}
                   onDeleteClick={handleDeleteClick}

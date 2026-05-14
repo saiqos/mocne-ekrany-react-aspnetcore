@@ -213,7 +213,7 @@ export const DashboardPage = () => {
 
       {/* Основные статистики */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Total Screens"
             value={screens.length}
@@ -221,7 +221,7 @@ export const DashboardPage = () => {
             color="#1976d2"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Total Images"
             value={images.length}
@@ -229,7 +229,7 @@ export const DashboardPage = () => {
             color="#f57c00"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Active Schedules"
             value={activeSchedules}
@@ -237,7 +237,7 @@ export const DashboardPage = () => {
             color="#388e3c"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Collections"
             value={collections.length}
@@ -249,7 +249,7 @@ export const DashboardPage = () => {
 
       {/* Статус экранов и активность */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid item size={{ xs: 12, sm: 6 }}>
           <StatusCard
             title="Screen Status"
             online={screensOnline}
@@ -257,14 +257,14 @@ export const DashboardPage = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item size={{ xs: 12, md: 6 }}>
           <RecentActivityCard logs={logs} />
         </Grid>
       </Grid>
 
       {/* Дополнительная информация */}
       <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={4}>
+        <Grid item size={{ xs: 12, md: 4 }}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" variant="body2" sx={{ mb: 1 }}>
@@ -278,7 +278,7 @@ export const DashboardPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item size={{ xs: 12, md: 4 }}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" variant="body2" sx={{ mb: 1 }}>
@@ -294,7 +294,7 @@ export const DashboardPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item size={{ xs: 12, md: 4 }}>
           <Card>
             <CardContent>
               <Typography color="textSecondary" variant="body2" sx={{ mb: 1 }}>

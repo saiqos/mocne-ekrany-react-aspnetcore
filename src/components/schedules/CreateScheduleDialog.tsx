@@ -176,7 +176,6 @@ export const CreateScheduleDialog = ({
                 }
                 error={!!errors.startDate}
                 helperText={errors.startDate}
-                InputLabelProps={{ shrink: true }}
                 disabled={isCreating}
                 fullWidth
                 variant="outlined"
@@ -196,7 +195,6 @@ export const CreateScheduleDialog = ({
                 onChange={(e) =>
                   setFormData({ ...formData, startTime: e.target.value })
                 }
-                InputLabelProps={{ shrink: true }}
                 disabled={isCreating}
                 fullWidth
                 variant="outlined"
@@ -221,7 +219,6 @@ export const CreateScheduleDialog = ({
                 }
                 error={!!errors.endDate}
                 helperText={errors.endDate}
-                InputLabelProps={{ shrink: true }}
                 disabled={isCreating}
                 fullWidth
                 variant="outlined"
@@ -241,7 +238,6 @@ export const CreateScheduleDialog = ({
                 onChange={(e) =>
                   setFormData({ ...formData, endTime: e.target.value })
                 }
-                InputLabelProps={{ shrink: true }}
                 disabled={isCreating}
                 fullWidth
                 variant="outlined"

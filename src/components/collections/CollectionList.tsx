@@ -53,15 +53,19 @@ export const CollectionList = ({
   return (
     <Grid container spacing={3}>
       {collections.map((collection) => (
-        <Grid item xs={12} sm={6} md={4} key={collection.id}>
+        <Grid item size={{ xs: 12, sm: 6, md: 4 }} key={collection.id}>
           <Card
             sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
           >
             <CardContent sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" sx={{ mb: 1 }}>
+              <Typography variant="h6" sx={{ marginBottom: 1 }}>
                 {collection.name}
               </Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                sx={{ marginBottom: 1 }}
+              >
                 Items: <strong>{collection.items.length}</strong>
               </Typography>
               <Typography variant="caption" color="textSecondary">
@@ -70,7 +74,7 @@ export const CollectionList = ({
               <Typography
                 variant="caption"
                 color="textSecondary"
-                sx={{ display: 'block', mt: 1 }}
+                sx={{ display: 'block', marginTop: 1 }}
               >
                 {new Date(collection.createdAt).toLocaleString()}
               </Typography>
