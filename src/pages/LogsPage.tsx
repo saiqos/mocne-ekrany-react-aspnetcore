@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import { LogTable } from '../components/logs/LogTable';
+import { LogTable } from '../components/logs/LogsTable';
 
 export const LogsPage = () => {
   return (
