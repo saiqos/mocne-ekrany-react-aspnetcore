@@ -1,22 +1,22 @@
 export interface User {
-    id: string;
+    id: number;
     username: string;
     role: 'Operator' | 'Admin';
 }
 
 export interface Screen {
-    id: string;
+    id: number;
     name: string;
     uniqueIdentifier: string;
-    groupId?: string;
-    location?: string;
+    groupId: number | null;
+    location: string;
     status: 'Online' | 'Offline';
-    lastSeen: string;
+    lastSeen: string | null;
     createdAt: string;
 }
 
 export interface Image {
-    id: string;
+    id: number;
     name: string;
     filePath: string;
     thumbnailPath: string;
@@ -29,7 +29,7 @@ export interface Image {
 }
 
 export interface Collection {
-    id: string;
+    id: number;
     name: string;
     createdAt: string;
     uploadedBy: string;
@@ -37,19 +37,19 @@ export interface Collection {
 }
 
 export interface CollectionItem {
-    id: string;
-    collectionId: string;
-    imageId: string;
+    id: number;
+    collectionId: number;
+    imageId: number;
     order: number;
     displayDuration: number;
 }
 
 export interface Schedule {
-    id: string;
+    id: number;
     name: string;
     imageId?: string;
     collectionId?: string;
-    screenId: string;
+    screenId: number;
     startDate: string;
     endDate: string;
     isRecurring: boolean;
@@ -57,11 +57,11 @@ export interface Schedule {
 }
 
 export interface AuditLog {
-    id: string;
-    userId: string;
+    id: number;
+    userId: number;
     action: string;
     entityType: string;
-    entityId: string;
+    entityId: number;
     timestamp: string;
     description: string;
 }

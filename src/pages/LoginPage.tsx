@@ -9,16 +9,18 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '../types';
+import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useSnackbarStore } from '../store/snackbarStore';
+import { login } from '../services/auth';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const { showSnackbar } = useSnackbarStore();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('admin');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,24 +29,18 @@ export const LoginPage = () => {
     setError('');
 
     try {
-      if (username === 'admin' && password === 'admin') {
-        const mockUser: User = {
-          id: '1',
-          username: 'admin',
-          role: 'Admin',
-        };
-        const mockToken = 'mock-jwt-token-12345';
+      const response = await login({ username, password });
 
-        setAuth(mockToken, mockUser);
-        showSnackbar('Login successful!', 'success');
-        navigate('/dashboard');
-      } else {
-        setError('Invalid credentials');
-        showSnackbar('Invalid credentials', 'error');
-      }
+      setAuth(response.token, response.user);
+      showSnackbar(response.message || 'Login successful!', 'success');
+      navigate('/dashboard');
     } catch (err) {
-      setError('Login failed');
-      showSnackbar('Login failed', 'error');
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.data?.message || 'Invalid credentials'
+        : 'Login failed';
+
+      setError(errorMessage);
+      showSnackbar(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }

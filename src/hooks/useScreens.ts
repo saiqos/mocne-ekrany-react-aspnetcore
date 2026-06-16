@@ -1,85 +1,120 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
 import { screenService } from '../services/screens';
+import type { Screen } from '../types';
 import { useSnackbarStore } from '../store/snackbarStore';
+import type {
+    CreateScreenPayload,
+    UpdateScreenPayload,
+} from '../services/screens';
 
 export const useScreens = () => {
     const { showSnackbar } = useSnackbarStore();
-    const queryClient = useQueryClient();
 
-    // GET all screens
-    const screensQuery = useQuery({
-        queryKey: ['screens'],
-        queryFn: screenService.getAll,
-    });
+    const [screens, setScreens] = useState<Screen[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isControllingPower, setIsControllingPower] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // POST create screen
-    const createMutation = useMutation({
-        mutationFn: screenService.create,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['screens'] });
+    const fetchScreens = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const data = await screenService.getAll();
+            setScreens(data);
+        } catch (err) {
+            setError('Failed to load screens');
+            showSnackbar('Failed to load screens', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showSnackbar]);
+
+    useEffect(() => {
+        fetchScreens();
+    }, [fetchScreens]);
+
+    const createScreen = async (payload: CreateScreenPayload) => {
+        setIsCreating(true);
+
+        try {
+            await screenService.create(payload);
             showSnackbar('Screen created successfully', 'success');
-        },
-        onError: (error: any) => {
-            showSnackbar(error.message || 'Failed to create screen', 'error');
-        },
-    });
+            await fetchScreens();
+        } catch (err) {
+            showSnackbar('Failed to create screen', 'error');
+            throw err;
+        } finally {
+            setIsCreating(false);
+        }
+    };
 
-    // PUT update screen
-    const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) =>
-            screenService.update(id, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['screens'] });
+    const updateScreen = async (id: number, payload: UpdateScreenPayload) => {
+        setIsUpdating(true);
+
+        try {
+            await screenService.update(id, payload);
             showSnackbar('Screen updated successfully', 'success');
-        },
-        onError: (error: any) => {
-            showSnackbar(error.message || 'Failed to update screen', 'error');
-        },
-    });
+            await fetchScreens();
+        } catch (err) {
+            showSnackbar('Failed to update screen', 'error');
+            throw err;
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
-    // DELETE screen
-    const deleteMutation = useMutation({
-        mutationFn: screenService.delete,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['screens'] });
+    const deleteScreen = async (id: number) => {
+        setIsDeleting(true);
+
+        try {
+            await screenService.delete(id);
             showSnackbar('Screen deleted successfully', 'success');
-        },
-        onError: (error: any) => {
-            showSnackbar(error.message || 'Failed to delete screen', 'error');
-        },
-    });
+            await fetchScreens();
+        } catch (err) {
+            showSnackbar('Failed to delete screen', 'error');
+            throw err;
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
-    // POST power control
-    const powerControlMutation = useMutation({
-        mutationFn: ({ id, action }: { id: string; action: 'on' | 'off' }) =>
-            screenService.powerControl(id, action),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['screens'] });
+    const powerControl = async (id: number, action: 'on' | 'off') => {
+        setIsControllingPower(true);
+
+        try {
+            await screenService.powerControl(id, action);
             showSnackbar('Power control executed', 'success');
-        },
-        onError: (error: any) => {
-            showSnackbar(error.message || 'Failed to control power', 'error');
-        },
-    });
+            await fetchScreens();
+        } catch (err) {
+            showSnackbar('Failed to control power', 'error');
+            throw err;
+        } finally {
+            setIsControllingPower(false);
+        }
+    };
 
     return {
-        // Query
-        screens: screensQuery.data || [],
-        isLoading: screensQuery.isLoading,
-        isError: screensQuery.isError,
-        error: screensQuery.error,
+        screens,
+        isLoading,
+        isError: Boolean(error),
+        error,
 
-        // Mutations
-        createScreen: createMutation.mutate,
-        isCreating: createMutation.isPending,
+        createScreen,
+        isCreating,
 
-        updateScreen: updateMutation.mutate,
-        isUpdating: updateMutation.isPending,
+        updateScreen,
+        isUpdating,
 
-        deleteScreen: deleteMutation.mutate,
-        isDeleting: deleteMutation.isPending,
+        deleteScreen,
+        isDeleting,
 
-        powerControl: powerControlMutation.mutate,
-        isControllingPower: powerControlMutation.isPending,
+        powerControl,
+        isControllingPower,
+
+        refetchScreens: fetchScreens,
     };
 };

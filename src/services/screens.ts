@@ -1,75 +1,52 @@
 import type { Screen } from '../types';
+import axiosClient from './axiosClient';
 
-const mockScreens: Screen[] = [
-    {
-        id: '1',
-        name: 'Main Hall Display',
-        uniqueIdentifier: 'SCREEN-001',
-        location: 'Main Hall',
-        status: 'Online',
-        lastSeen: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: '2',
-        name: 'Lobby Screen',
-        uniqueIdentifier: 'SCREEN-002',
-        location: 'Lobby',
-        status: 'Offline',
-        lastSeen: new Date(Date.now() - 3600000).toISOString(),
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: '3',
-        name: 'Conference Room',
-        uniqueIdentifier: 'SCREEN-003',
-        location: 'Conference Room',
-        status: 'Online',
-        lastSeen: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-    },
-];
+export interface CreateScreenPayload {
+    name: string;
+    uniqueIdentifier: string;
+    groupId: number | null;
+    location: string;
+}
+
+export interface UpdateScreenPayload {
+    name: string;
+    uniqueIdentifier: string;
+    groupId: number | null;
+    location: string;
+}
 
 export const screenService = {
     getAll: async (): Promise<Screen[]> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockScreens;
+        const response = await axiosClient.get<Screen[]>('/api/screens');
+
+        return response.data;
     },
 
-    create: async (payload: { name: string; location?: string }): Promise<Screen> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const newScreen: Screen = {
-            id: String(mockScreens.length + 1),
-            name: payload.name,
-            uniqueIdentifier: `SCREEN-${String(mockScreens.length + 1).padStart(3, '0')}`,
-            location: payload.location,
-            status: 'Offline',
-            lastSeen: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-        };
-        mockScreens.push(newScreen);
-        return newScreen;
+    getById: async (id: number): Promise<Screen> => {
+        const response = await axiosClient.get<Screen>(`/api/screens/${id}`);
+
+        return response.data;
     },
 
-    update: async (id: string, payload: Partial<Screen>): Promise<Screen> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const screen = mockScreens.find(s => s.id === id);
-        if (!screen) throw new Error('Screen not found');
-        Object.assign(screen, payload);
-        return screen;
+    create: async (payload: CreateScreenPayload): Promise<Screen> => {
+        const response = await axiosClient.post<Screen>('/api/screens', payload);
+
+        return response.data;
     },
 
-    delete: async (id: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const index = mockScreens.findIndex(s => s.id === id);
-        if (index === -1) throw new Error('Screen not found');
-        mockScreens.splice(index, 1);
+    update: async (id: number, payload: UpdateScreenPayload): Promise<Screen> => {
+        const response = await axiosClient.put<Screen>(`/api/screens/${id}`, payload);
+
+        return response.data;
     },
 
-    powerControl: async (id: string, action: 'on' | 'off'): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const screen = mockScreens.find(s => s.id === id);
-        if (!screen) throw new Error('Screen not found');
-        screen.status = action === 'on' ? 'Online' : 'Offline';
+    delete: async (id: number): Promise<void> => {
+        await axiosClient.delete(`/api/screens/${id}`);
+    },
+
+    powerControl: async (id: number, action: 'on' | 'off'): Promise<void> => {
+        await axiosClient.post(`/api/screens/${id}/power`, {
+            isOnline: action === 'on',
+        });
     },
 };

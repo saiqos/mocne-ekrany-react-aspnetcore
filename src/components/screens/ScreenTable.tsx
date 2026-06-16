@@ -27,7 +27,14 @@ export const ScreenTable = ({
   onEditClick,
   onDeleteClick,
 }: ScreenTableProps) => {
-  const { screens, isLoading, isError, error, powerControl } = useScreens();
+  const {
+    screens,
+    isLoading,
+    isError,
+    error,
+    powerControl,
+    isControllingPower,
+  } = useScreens();
 
   if (isLoading) {
     return (
@@ -38,11 +45,7 @@ export const ScreenTable = ({
   }
 
   if (isError) {
-    return (
-      <Alert severity="error">
-        {(error as any)?.message || 'Failed to load screens'}
-      </Alert>
-    );
+    return <Alert severity="error">{error || 'Failed to load screens'}</Alert>;
   }
 
   if (screens.length === 0) {
@@ -64,14 +67,18 @@ export const ScreenTable = ({
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
+
         <TableBody>
           {screens.map((screen) => (
             <TableRow key={screen.id}>
               <TableCell sx={{ fontWeight: 500 }}>{screen.name}</TableCell>
+
               <TableCell sx={{ fontSize: '0.875rem', color: '#666' }}>
                 {screen.uniqueIdentifier}
               </TableCell>
+
               <TableCell>{screen.location || '-'}</TableCell>
+
               <TableCell>
                 <Chip
                   label={screen.status}
@@ -79,23 +86,29 @@ export const ScreenTable = ({
                   size="small"
                 />
               </TableCell>
+
               <TableCell sx={{ fontSize: '0.875rem' }}>
-                {new Date(screen.lastSeen).toLocaleString()}
+                {screen.lastSeen
+                  ? new Date(screen.lastSeen).toLocaleString()
+                  : 'Never'}
               </TableCell>
+
               <TableCell align="right" sx={{ display: 'flex', gap: '5px' }}>
                 <IconButton
                   size="small"
                   onClick={() =>
-                    powerControl({
-                      id: screen.id,
-                      action: screen.status === 'Online' ? 'off' : 'on',
-                    })
+                    powerControl(
+                      screen.id,
+                      screen.status === 'Online' ? 'off' : 'on',
+                    )
                   }
+                  disabled={isControllingPower}
                   color="primary"
                   title={screen.status === 'Online' ? 'Turn off' : 'Turn on'}
                 >
                   <PowerSettingsNewIcon />
                 </IconButton>
+
                 <IconButton
                   size="small"
                   onClick={() => onEditClick(screen)}
@@ -103,6 +116,7 @@ export const ScreenTable = ({
                 >
                   <EditIcon />
                 </IconButton>
+
                 <IconButton
                   size="small"
                   onClick={() => onDeleteClick(screen)}

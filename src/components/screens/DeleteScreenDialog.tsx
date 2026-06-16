@@ -23,24 +23,23 @@ export const DeleteScreenDialog = ({
 }: DeleteScreenDialogProps) => {
   const { deleteScreen, isDeleting } = useScreens();
 
-  const handleDelete = () => {
-    if (screen) {
-      deleteScreen(screen.id, {
-        onSuccess: () => {
-          onClose();
-        },
-      });
-    }
+  const handleDelete = async () => {
+    if (!screen) return;
+
+    await deleteScreen(screen.id);
+    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Delete Screen</DialogTitle>
+
       <DialogContent>
         <Typography>
           Are you sure you want to delete screen <strong>{screen?.name}</strong>
           ?
         </Typography>
+
         <Typography
           variant="caption"
           sx={{ display: 'block', mt: 1, color: '#666' }}
@@ -48,10 +47,12 @@ export const DeleteScreenDialog = ({
           This action cannot be undone.
         </Typography>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose} disabled={isDeleting}>
           Cancel
         </Button>
+
         <Button
           onClick={handleDelete}
           variant="contained"

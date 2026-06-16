@@ -24,14 +24,16 @@ export const EditScreenDialog = ({
   onClose,
 }: EditScreenDialogProps) => {
   const { updateScreen, isUpdating } = useScreens();
+
   const [name, setName] = useState('');
+  const [uniqueIdentifier, setUniqueIdentifier] = useState('');
   const [location, setLocation] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Заполняем форму данными экрана при открытии диалога
   useEffect(() => {
     if (screen && open) {
       setName(screen.name);
+      setUniqueIdentifier(screen.uniqueIdentifier);
       setLocation(screen.location || '');
       setErrors({});
     }
@@ -39,36 +41,38 @@ export const EditScreenDialog = ({
 
   const handleValidate = () => {
     const newErrors: { [key: string]: string } = {};
+
     if (!name.trim()) newErrors.name = 'Name is required';
+    if (!uniqueIdentifier.trim()) {
+      newErrors.uniqueIdentifier = 'Unique identifier is required';
+    }
+
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!handleValidate() || !screen) return;
 
-    updateScreen(
-      {
-        id: screen.id,
-        data: {
-          name,
-          location,
-        },
-      },
-      {
-        onSuccess: () => {
-          setName('');
-          setLocation('');
-          setErrors({});
-          onClose();
-        },
-      },
-    );
+    await updateScreen(screen.id, {
+      name,
+      uniqueIdentifier,
+      groupId: screen.groupId,
+      location,
+    });
+
+    setName('');
+    setUniqueIdentifier('');
+    setLocation('');
+    setErrors({});
+    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Edit Screen</DialogTitle>
+
       <DialogContent>
         <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -80,6 +84,17 @@ export const EditScreenDialog = ({
             helperText={errors.name}
             disabled={isUpdating}
           />
+
+          <TextField
+            fullWidth
+            label="Unique Identifier"
+            value={uniqueIdentifier}
+            onChange={(e) => setUniqueIdentifier(e.target.value)}
+            error={!!errors.uniqueIdentifier}
+            helperText={errors.uniqueIdentifier}
+            disabled={isUpdating}
+          />
+
           <TextField
             fullWidth
             label="Location"
@@ -87,20 +102,14 @@ export const EditScreenDialog = ({
             onChange={(e) => setLocation(e.target.value)}
             disabled={isUpdating}
           />
-          <TextField
-            fullWidth
-            label="Unique ID"
-            value={screen?.uniqueIdentifier || ''}
-            disabled
-            variant="outlined"
-            size="small"
-          />
         </Box>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose} disabled={isUpdating}>
           Cancel
         </Button>
+
         <Button
           onClick={handleSubmit}
           variant="contained"
