@@ -1,34 +1,35 @@
 import {
+  Alert,
   Box,
-  Grid,
   Card,
   CardContent,
-  Typography,
+  CircularProgress,
+  Divider,
+  Grid,
   LinearProgress,
   Stack,
-  Divider,
+  Typography,
 } from '@mui/material';
 import ScreenshotIcon from '@mui/icons-material/Screenshot';
 import ImageIcon from '@mui/icons-material/Image';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import CollectionsIcon from '@mui/icons-material/Collections';
+import type { ReactNode } from 'react';
 import { useScreens } from '../hooks/useScreens';
 import { useImages } from '../hooks/useImages';
 import { useSchedules } from '../hooks/useSchedules';
 import { useCollections } from '../hooks/useCollections';
 import { useLogs } from '../hooks/useLogs';
+import type { AuditLog } from '../types';
 
-const StatCard = ({
-  title,
-  value,
-  icon,
-  color,
-}: {
+type StatCardProps = {
   title: string;
   value: number;
-  icon: React.ReactNode;
+  icon: ReactNode;
   color: string;
-}) => (
+};
+
+const StatCard = ({ title, value, icon, color }: StatCardProps) => (
   <Card>
     <CardContent>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -46,10 +47,12 @@ const StatCard = ({
         >
           {icon}
         </Box>
+
         <Box>
           <Typography color="textSecondary" variant="body2">
             {title}
           </Typography>
+
           <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
             {value}
           </Typography>
@@ -59,15 +62,13 @@ const StatCard = ({
   </Card>
 );
 
-const StatusCard = ({
-  title,
-  online,
-  offline,
-}: {
+type StatusCardProps = {
   title: string;
   online: number;
   offline: number;
-}) => {
+};
+
+const StatusCard = ({ title, online, offline }: StatusCardProps) => {
   const total = online + offline;
   const onlinePercent = total === 0 ? 0 : (online / total) * 100;
 
@@ -77,6 +78,7 @@ const StatusCard = ({
         <Typography color="textSecondary" variant="body2" sx={{ mb: 2 }}>
           {title}
         </Typography>
+
         <Box sx={{ mb: 2 }}>
           <LinearProgress
             variant="determinate"
@@ -91,6 +93,7 @@ const StatusCard = ({
             }}
           />
         </Box>
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="caption" color="textSecondary">
@@ -100,6 +103,7 @@ const StatusCard = ({
               {online}
             </Typography>
           </Box>
+
           <Box>
             <Typography variant="caption" color="textSecondary">
               Offline
@@ -108,6 +112,7 @@ const StatusCard = ({
               {offline}
             </Typography>
           </Box>
+
           <Box>
             <Typography variant="caption" color="textSecondary">
               Total
@@ -120,8 +125,14 @@ const StatusCard = ({
   );
 };
 
-const RecentActivityCard = ({ logs }: { logs: any[] }) => {
-  const recentLogs = logs.slice(0, 5);
+const RecentActivityCard = ({ logs }: { logs: AuditLog[] }) => {
+  const recentLogs = [...logs]
+    .sort(
+      (firstLog, secondLog) =>
+        new Date(secondLog.timestamp).getTime() -
+        new Date(firstLog.timestamp).getTime(),
+    )
+    .slice(0, 5);
 
   return (
     <Card>
@@ -129,6 +140,7 @@ const RecentActivityCard = ({ logs }: { logs: any[] }) => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Recent Activity
         </Typography>
+
         <Stack spacing={1}>
           {recentLogs.length === 0 ? (
             <Typography variant="caption" color="textSecondary">
@@ -136,12 +148,13 @@ const RecentActivityCard = ({ logs }: { logs: any[] }) => {
             </Typography>
           ) : (
             recentLogs.map((log, index) => (
-              <Box key={index}>
+              <Box key={log.id}>
                 <Box
                   sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
+                    gap: 2,
                   }}
                 >
                   <Box>
@@ -166,10 +179,12 @@ const RecentActivityCard = ({ logs }: { logs: any[] }) => {
                     >
                       {log.action}
                     </Typography>
+
                     <Typography variant="caption">
                       {log.entityType} ({log.entityId})
                     </Typography>
                   </Box>
+
                   <Typography
                     variant="caption"
                     color="textSecondary"
@@ -178,6 +193,7 @@ const RecentActivityCard = ({ logs }: { logs: any[] }) => {
                     {new Date(log.timestamp).toLocaleString()}
                   </Typography>
                 </Box>
+
                 {index < recentLogs.length - 1 && <Divider sx={{ my: 1 }} />}
               </Box>
             ))
@@ -189,21 +205,84 @@ const RecentActivityCard = ({ logs }: { logs: any[] }) => {
 };
 
 export const DashboardPage = () => {
-  const { screens } = useScreens();
-  const { images } = useImages();
-  const { schedules } = useSchedules();
-  const { collections } = useCollections();
-  const { logs } = useLogs();
+  const {
+    screens,
+    isLoading: isScreensLoading,
+    isError: isScreensError,
+  } = useScreens();
 
-  // Подсчитываем статистику
-  const screensOnline = screens.filter((s) => s.status === 'Online').length;
-  const screensOffline = screens.filter((s) => s.status === 'Offline').length;
-  const activeSchedules = schedules.filter((s) => {
+  const {
+    images,
+    isLoading: isImagesLoading,
+    isError: isImagesError,
+  } = useImages();
+
+  const {
+    schedules,
+    isLoading: isSchedulesLoading,
+    isError: isSchedulesError,
+  } = useSchedules();
+
+  const {
+    collections,
+    isLoading: isCollectionsLoading,
+    isError: isCollectionsError,
+  } = useCollections();
+
+  const { logs, isLoading: isLogsLoading, isError: isLogsError } = useLogs();
+
+  const isLoading =
+    isScreensLoading ||
+    isImagesLoading ||
+    isSchedulesLoading ||
+    isCollectionsLoading ||
+    isLogsLoading;
+
+  const isError =
+    isScreensError ||
+    isImagesError ||
+    isSchedulesError ||
+    isCollectionsError ||
+    isLogsError;
+
+  const screensOnline = screens.filter(
+    (screen) => screen.status === 'Online',
+  ).length;
+  const screensOffline = screens.filter(
+    (screen) => screen.status === 'Offline',
+  ).length;
+
+  const activeSchedules = schedules.filter((schedule) => {
     const now = new Date();
-    const start = new Date(s.startDate);
-    const end = new Date(s.endDate);
+    const start = new Date(schedule.startDate);
+    const end = new Date(schedule.endDate);
+
     return start <= now && now <= end;
   }).length;
+
+  const storageUsedInMb = (
+    images.reduce((sum, image) => sum + image.fileSize, 0) /
+    1024 /
+    1024
+  ).toFixed(2);
+
+  const latestLog = [...logs].sort(
+    (firstLog, secondLog) =>
+      new Date(secondLog.timestamp).getTime() -
+      new Date(firstLog.timestamp).getTime(),
+  )[0];
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return <Alert severity="error">Failed to load dashboard data</Alert>;
+  }
 
   return (
     <Box>
@@ -211,9 +290,8 @@ export const DashboardPage = () => {
         Dashboard
       </Typography>
 
-      {/* Основные статистики */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
             title="Total Screens"
             value={screens.length}
@@ -221,7 +299,8 @@ export const DashboardPage = () => {
             color="#1976d2"
           />
         </Grid>
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+
+        <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
             title="Total Images"
             value={images.length}
@@ -229,7 +308,8 @@ export const DashboardPage = () => {
             color="#f57c00"
           />
         </Grid>
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+
+        <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
             title="Active Schedules"
             value={activeSchedules}
@@ -237,7 +317,8 @@ export const DashboardPage = () => {
             color="#388e3c"
           />
         </Grid>
-        <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+
+        <Grid item size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
             title="Collections"
             value={collections.length}
@@ -247,9 +328,8 @@ export const DashboardPage = () => {
         </Grid>
       </Grid>
 
-      {/* Статус экранов и активность */}
       <Grid container spacing={3}>
-        <Grid item size={{ xs: 12, sm: 6 }}>
+        <Grid item size={{ xs: 12, md: 6 }}>
           <StatusCard
             title="Screen Status"
             online={screensOnline}
@@ -262,7 +342,6 @@ export const DashboardPage = () => {
         </Grid>
       </Grid>
 
-      {/* Дополнительная информация */}
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item size={{ xs: 12, md: 4 }}>
           <Card>
@@ -270,7 +349,9 @@ export const DashboardPage = () => {
               <Typography color="textSecondary" variant="body2" sx={{ mb: 1 }}>
                 Total Schedules
               </Typography>
+
               <Typography variant="h5">{schedules.length}</Typography>
+
               <Typography variant="caption" color="textSecondary">
                 {activeSchedules} active now
               </Typography>
@@ -284,11 +365,11 @@ export const DashboardPage = () => {
               <Typography color="textSecondary" variant="body2" sx={{ mb: 1 }}>
                 Total Logs
               </Typography>
+
               <Typography variant="h5">{logs.length}</Typography>
+
               <Typography variant="caption" color="textSecondary">
-                {logs.slice(0, 1).length > 0
-                  ? `Last: ${logs[0]?.action || 'N/A'}`
-                  : 'No activity'}
+                {latestLog ? `Last: ${latestLog.action}` : 'No activity'}
               </Typography>
             </CardContent>
           </Card>
@@ -300,14 +381,9 @@ export const DashboardPage = () => {
               <Typography color="textSecondary" variant="body2" sx={{ mb: 1 }}>
                 Storage Used
               </Typography>
-              <Typography variant="h5">
-                {(
-                  images.reduce((sum, img) => sum + img.fileSize, 0) /
-                  1024 /
-                  1024
-                ).toFixed(2)}{' '}
-                MB
-              </Typography>
+
+              <Typography variant="h5">{storageUsedInMb} MB</Typography>
+
               <Typography variant="caption" color="textSecondary">
                 {images.length} files
               </Typography>

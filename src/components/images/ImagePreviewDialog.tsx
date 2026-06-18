@@ -17,6 +17,18 @@ interface ImagePreviewDialogProps {
   onClose: () => void;
 }
 
+const getImageUrl = (image: Image) => {
+  if (image.thumbnailPath) {
+    if (image.thumbnailPath.startsWith('http')) {
+      return image.thumbnailPath;
+    }
+
+    return `${import.meta.env.VITE_API_URL}${image.thumbnailPath}`;
+  }
+
+  return `${import.meta.env.VITE_API_URL}/api/images/${image.id}/file`;
+};
+
 export const ImagePreviewDialog = ({
   open,
   image,
@@ -25,12 +37,13 @@ export const ImagePreviewDialog = ({
   if (!image) return null;
 
   const fileSizeInMB = (image.fileSize / 1024 / 1024).toFixed(2);
+  const imageUrl = getImageUrl(image);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>{image.name}</DialogTitle>
+
       <DialogContent>
-        {/* Mock preview - потом будет реальное изображение */}
         <Box
           sx={{
             width: '100%',
@@ -42,12 +55,19 @@ export const ImagePreviewDialog = ({
             borderRadius: 1,
             mb: 2,
             mt: 2,
+            overflow: 'hidden',
           }}
         >
-          <Box sx={{ textAlign: 'center', color: '#999' }}>
-            <Typography variant="h4">📷</Typography>
-            <Typography variant="body2">Image Preview</Typography>
-          </Box>
+          <Box
+            component="img"
+            src={imageUrl}
+            alt={image.name}
+            sx={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+            }}
+          />
         </Box>
 
         <Stack spacing={2}>
@@ -76,30 +96,15 @@ export const ImagePreviewDialog = ({
 
           <Box>
             <Typography variant="subtitle2" color="textSecondary">
-              Uploaded By
-            </Typography>
-            <Typography>{image.uploadedBy}</Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="subtitle2" color="textSecondary">
               Created At
             </Typography>
             <Typography>
               {new Date(image.createdAt).toLocaleString()}
             </Typography>
           </Box>
-
-          <Box>
-            <Typography variant="subtitle2" color="textSecondary">
-              File Path
-            </Typography>
-            <Typography variant="caption" sx={{ wordBreak: 'break-all' }}>
-              {image.filePath}
-            </Typography>
-          </Box>
         </Stack>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>

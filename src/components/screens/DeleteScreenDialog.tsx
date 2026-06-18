@@ -7,22 +7,23 @@ import {
   Typography,
   CircularProgress,
 } from '@mui/material';
-import { useScreens } from '../../hooks/useScreens';
 import type { Screen } from '../../types';
 
 interface DeleteScreenDialogProps {
   open: boolean;
   screen: Screen | null;
+  isDeleting: boolean;
+  deleteScreen: (id: number) => Promise<void>;
   onClose: () => void;
 }
 
 export const DeleteScreenDialog = ({
   open,
   screen,
+  isDeleting,
+  deleteScreen,
   onClose,
 }: DeleteScreenDialogProps) => {
-  const { deleteScreen, isDeleting } = useScreens();
-
   const handleDelete = async () => {
     if (!screen) return;
 

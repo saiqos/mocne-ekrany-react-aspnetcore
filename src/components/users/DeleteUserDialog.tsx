@@ -1,44 +1,44 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
-  Typography,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
 } from '@mui/material';
-import type { Schedule } from '../../types';
+import type { UserDto } from '../../types';
 
-interface DeleteScheduleDialogProps {
+interface DeleteUserDialogProps {
   open: boolean;
-  schedule: Schedule | null;
+  user: UserDto | null;
   isDeleting: boolean;
-  deleteSchedule: (id: number) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
   onClose: () => void;
 }
 
-export const DeleteScheduleDialog = ({
+export const DeleteUserDialog = ({
   open,
-  schedule,
+  user,
   isDeleting,
-  deleteSchedule,
+  deleteUser,
   onClose,
-}: DeleteScheduleDialogProps) => {
+}: DeleteUserDialogProps) => {
   const handleDelete = async () => {
-    if (!schedule) return;
+    if (!user) return;
 
-    await deleteSchedule(schedule.id);
+    await deleteUser(user.id);
     onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Delete Schedule</DialogTitle>
+      <DialogTitle>Delete User</DialogTitle>
 
       <DialogContent>
         <Typography>
-          Are you sure you want to delete schedule{' '}
-          <strong>{schedule?.name}</strong>?
+          Are you sure you want to delete user <strong>{user?.username}</strong>
+          ?
         </Typography>
 
         <Typography

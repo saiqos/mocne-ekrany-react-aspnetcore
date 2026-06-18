@@ -14,31 +14,41 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useSchedules } from '../../hooks/useSchedules';
-import { useScreens } from '../../hooks/useScreens';
-import { useImages } from '../../hooks/useImages';
-import type { Schedule } from '../../types';
+import type { Image, Schedule, Screen } from '../../types';
 
 interface ScheduleTableProps {
+  schedules: Schedule[];
+  screens: Screen[];
+  images: Image[];
+  isLoading: boolean;
+  isError: boolean;
+  error: string | null;
   onEditClick: (schedule: Schedule) => void;
   onDeleteClick: (schedule: Schedule) => void;
 }
 
 export const ScheduleTable = ({
+  schedules,
+  screens,
+  images,
+  isLoading,
+  isError,
+  error,
   onEditClick,
   onDeleteClick,
 }: ScheduleTableProps) => {
-  const { schedules, isLoading, isError, error } = useSchedules();
-  const { screens } = useScreens();
-  const { images } = useImages();
-
-  const getScreenName = (screenId: string) => {
-    return screens.find((s) => s.id === screenId)?.name || screenId;
+  const getScreenName = (screenId: number) => {
+    return (
+      screens.find((screen) => screen.id === screenId)?.name || String(screenId)
+    );
   };
 
-  const getImageName = (imageId?: string) => {
+  const getImageName = (imageId: number | null) => {
     if (!imageId) return '-';
-    return images.find((i) => i.id === imageId)?.name || imageId;
+
+    return (
+      images.find((image) => image.id === imageId)?.name || String(imageId)
+    );
   };
 
   if (isLoading) {
@@ -51,9 +61,7 @@ export const ScheduleTable = ({
 
   if (isError) {
     return (
-      <Alert severity="error">
-        {(error as any)?.message || 'Failed to load schedules'}
-      </Alert>
+      <Alert severity="error">{error || 'Failed to load schedules'}</Alert>
     );
   }
 
@@ -80,18 +88,36 @@ export const ScheduleTable = ({
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
+
         <TableBody>
           {schedules.map((schedule) => (
             <TableRow key={schedule.id}>
-              <TableCell sx={{ fontWeight: 500 }}>{schedule.name}</TableCell>
+              <TableCell
+                sx={{
+                  fontWeight: 500,
+                }}
+              >
+                {schedule.name}
+              </TableCell>
               <TableCell>{getScreenName(schedule.screenId)}</TableCell>
-              <TableCell>{getImageName(schedule.imageId)}</TableCell>
+              <TableCell
+                sx={{
+                  maxWidth: '200px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {getImageName(schedule.imageId)}
+              </TableCell>
+
               <TableCell sx={{ fontSize: '0.875rem' }}>
                 {new Date(schedule.startDate).toLocaleString()}
               </TableCell>
+
               <TableCell sx={{ fontSize: '0.875rem' }}>
                 {new Date(schedule.endDate).toLocaleString()}
               </TableCell>
+
               <TableCell>
                 <Chip
                   label={schedule.isRecurring ? 'Yes' : 'No'}
@@ -99,6 +125,7 @@ export const ScheduleTable = ({
                   color={schedule.isRecurring ? 'primary' : 'default'}
                 />
               </TableCell>
+
               <TableCell>
                 <Chip
                   label={`P${schedule.priority}`}
@@ -106,6 +133,7 @@ export const ScheduleTable = ({
                   variant="outlined"
                 />
               </TableCell>
+
               <TableCell align="right">
                 <IconButton
                   size="small"
@@ -114,6 +142,7 @@ export const ScheduleTable = ({
                 >
                   <EditIcon />
                 </IconButton>
+
                 <IconButton
                   size="small"
                   onClick={() => onDeleteClick(schedule)}

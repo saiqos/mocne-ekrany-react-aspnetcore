@@ -4,6 +4,13 @@ export interface User {
     role: 'Operator' | 'Admin';
 }
 
+export interface UserDto {
+    id: number;
+    username: string;
+    role: 'Admin' | 'Operator';
+    createdAt: string;
+}
+
 export interface Screen {
     id: number;
     name: string;
@@ -18,41 +25,48 @@ export interface Screen {
 export interface Image {
     id: number;
     name: string;
-    filePath: string;
-    thumbnailPath: string;
     format: string;
     width: number;
     height: number;
     fileSize: number;
+    thumbnailPath: string | null;
     createdAt: string;
-    uploadedBy: string;
 }
 
 export interface Collection {
     id: number;
     name: string;
+    itemCount: number;
     createdAt: string;
-    uploadedBy: string;
-    items: CollectionItem[];
 }
 
 export interface CollectionItem {
     id: number;
-    collectionId: number;
     imageId: number;
+    imageName: string;
+    thumbnailPath: string | null;
     order: number;
-    displayDuration: number;
+    displayDurationSeconds: number;
+}
+
+export interface CollectionDetails {
+    id: number;
+    name: string;
+    itemCount: number;
+    createdAt: string;
+    items: CollectionItem[];
 }
 
 export interface Schedule {
     id: number;
     name: string;
-    imageId?: string;
-    collectionId?: string;
+    imageId: number | null;
+    collectionId: number | null;
     screenId: number;
     startDate: string;
     endDate: string;
     isRecurring: boolean;
+    recurrencePattern: string | null;
     priority: number;
 }
 

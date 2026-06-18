@@ -16,141 +16,190 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { useCollections } from '../../hooks/useCollections';
 import { useImages } from '../../hooks/useImages';
-import type { Collection, CollectionItem } from '../../types';
+import type {
+  Collection,
+  CollectionDetails,
+  CollectionItem,
+} from '../../types';
+import type {
+  CreateCollectionItemPayload,
+  UpdateCollectionItemPayload,
+} from '../../services/collections';
 
 interface CollectionItemsEditorProps {
   open: boolean;
   collection: Collection | null;
+  getCollectionById: (id: number) => Promise<CollectionDetails>;
+  addCollectionItem: (
+    collectionId: number,
+    payload: CreateCollectionItemPayload,
+  ) => Promise<void>;
+  updateCollectionItem: (
+    collectionId: number,
+    itemId: number,
+    payload: UpdateCollectionItemPayload,
+  ) => Promise<void>;
+  deleteCollectionItem: (collectionId: number, itemId: number) => Promise<void>;
+  isAddingItem: boolean;
+  isUpdatingItem: boolean;
+  isDeletingItem: boolean;
   onClose: () => void;
 }
 
 export const CollectionItemsEditor = ({
   open,
   collection,
+  getCollectionById,
+  addCollectionItem,
+  updateCollectionItem,
+  deleteCollectionItem,
+  isAddingItem,
+  isUpdatingItem,
+  isDeletingItem,
   onClose,
 }: CollectionItemsEditorProps) => {
-  const { updateCollection, isUpdating } = useCollections();
   const { images } = useImages();
-  const [items, setItems] = useState<CollectionItem[]>([]);
-  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
-  const [displayDuration, setDisplayDuration] = useState('30');
 
-  // Инициализируем items при открытии
+  const [items, setItems] = useState<CollectionItem[]>([]);
+  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
+  const [displayDuration, setDisplayDuration] = useState('30');
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
+
+  const loadCollectionDetails = async () => {
+    if (!collection) return;
+
+    setIsLoadingDetails(true);
+
+    try {
+      const data = await getCollectionById(collection.id);
+      setItems([...data.items].sort((a, b) => a.order - b.order));
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
   useEffect(() => {
-    if (collection && open) {
-      setItems(collection.items || []);
+    if (open && collection) {
+      loadCollectionDetails();
       setSelectedImageId(null);
       setDisplayDuration('30');
     }
-  }, [collection, open]);
+  }, [open, collection]);
 
-  const handleAddItem = () => {
-    if (!selectedImageId) return;
+  const handleAddItem = async () => {
+    if (!collection || !selectedImageId) return;
 
-    const newItem: CollectionItem = {
-      id: String(Date.now()),
-      collectionId: collection?.id || '',
+    const duration = Number(displayDuration);
+
+    if (!duration || duration <= 0) return;
+
+    await addCollectionItem(collection.id, {
       imageId: selectedImageId,
       order: items.length,
-      displayDuration: parseInt(displayDuration),
-    };
+      displayDurationSeconds: duration,
+    });
 
-    setItems([...items, newItem]);
     setSelectedImageId(null);
     setDisplayDuration('30');
+    await loadCollectionDetails();
   };
 
-  const handleRemoveItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
-  };
-
-  const handleSave = () => {
+  const handleUpdateItemDuration = async (
+    item: CollectionItem,
+    value: string,
+  ) => {
     if (!collection) return;
 
-    updateCollection(
-      {
-        id: collection.id,
-        data: {
-          items,
-        },
-      },
-      {
-        onSuccess: () => {
-          setItems([]);
-          onClose();
-        },
-      },
-    );
+    const nextDuration = Number(value);
+
+    if (!nextDuration || nextDuration <= 0) return;
+
+    if (nextDuration === item.displayDurationSeconds) return;
+
+    setUpdatingItemId(item.id);
+
+    try {
+      await updateCollectionItem(collection.id, item.id, {
+        order: item.order,
+        displayDurationSeconds: nextDuration,
+      });
+
+      await loadCollectionDetails();
+    } finally {
+      setUpdatingItemId(null);
+    }
   };
 
-  const getImageName = (imageId: string) => {
-    return images.find((i) => i.id === imageId)?.name || imageId;
+  const handleRemoveItem = async (itemId: number) => {
+    if (!collection) return;
+
+    await deleteCollectionItem(collection.id, itemId);
+    await loadCollectionDetails();
   };
+
+  const isBusy =
+    isLoadingDetails || isAddingItem || isUpdatingItem || isDeletingItem;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit Collection: {collection?.name}</DialogTitle>
+      <DialogTitle>Edit Collection Items: {collection?.name}</DialogTitle>
+
       <DialogContent>
         <Box sx={{ pt: 2 }}>
-          {/* Добавление новых items */}
           <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f9f9f9' }}>
-            <Typography variant="subtitle2" sx={{ marginBottom: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 2 }}>
               Add Images to Collection
             </Typography>
 
-            <Box
-              sx={{ display: 'flex', gap: 1, mb: 2, flexDirection: 'column' }}
-            >
+            <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
               <Autocomplete
-                sx={{ mt: 1 }}
                 options={images}
                 getOptionLabel={(option) => option.name}
-                value={images.find((i) => i.id === selectedImageId) || null}
-                onChange={(_, value) => setSelectedImageId(value?.id || null)}
+                value={
+                  images.find((image) => image.id === selectedImageId) || null
+                }
+                onChange={(_, value) => setSelectedImageId(value?.id ?? null)}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Image"
-                    size="small"
-                    disabled={isUpdating}
-                  />
+                  <TextField {...params} label="Select Image" size="small" />
                 )}
+                disabled={isBusy}
               />
 
               <TextField
-                sx={{ mt: 2 }}
                 label="Display Duration (seconds)"
                 type="number"
                 size="small"
                 value={displayDuration}
-                onChange={(e) => setDisplayDuration(e.target.value)}
-                disabled={isUpdating}
+                onChange={(event) => setDisplayDuration(event.target.value)}
+                disabled={isBusy}
               />
 
               <Button
-                sx={{ mt: 1 }}
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={handleAddItem}
-                disabled={!selectedImageId || isUpdating}
+                disabled={!selectedImageId || isBusy}
                 size="small"
               >
-                Add Image
+                {isAddingItem ? 'Adding...' : 'Add Image'}
               </Button>
             </Box>
           </Paper>
 
-          {/* Список items */}
-          <Typography variant="subtitle2" sx={{ marginBottom: 1 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
             Items ({items.length})
           </Typography>
 
-          {items.length === 0 ? (
+          {isLoadingDetails ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : items.length === 0 ? (
             <Typography variant="caption" color="textSecondary">
               No images added yet
             </Typography>
@@ -159,15 +208,59 @@ export const CollectionItemsEditor = ({
               {items.map((item, index) => (
                 <ListItem key={item.id} sx={{ py: 1 }}>
                   <ListItemText
-                    primary={`${index + 1}. ${getImageName(item.imageId)}`}
-                    secondary={`Duration: ${item.displayDuration}s`}
+                    sx={{
+                      maxWidth: '150px',
+                      marginRight: '50px',
+                      minWidth: 0,
+                    }}
+                    primary={
+                      <Typography
+                        noWrap
+                        variant="body1"
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {index + 1}. {item.imageName}
+                      </Typography>
+                    }
+                    secondary={`Order: ${item.order}`}
                   />
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mr: 5,
+                    }}
+                  >
+                    <TextField
+                      label="Seconds"
+                      type="number"
+                      size="small"
+                      defaultValue={item.displayDurationSeconds}
+                      sx={{ width: 100 }}
+                      disabled={updatingItemId === item.id || isDeletingItem}
+                      onBlur={(event) =>
+                        handleUpdateItemDuration(item, event.target.value)
+                      }
+                    />
+
+                    {updatingItemId === item.id && (
+                      <CircularProgress size={18} />
+                    )}
+                  </Box>
+
                   <ListItemSecondaryAction>
                     <IconButton
                       edge="end"
                       onClick={() => handleRemoveItem(item.id)}
-                      disabled={isUpdating}
+                      disabled={isBusy}
                       size="small"
+                      color="error"
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -178,23 +271,10 @@ export const CollectionItemsEditor = ({
           )}
         </Box>
       </DialogContent>
+
       <DialogActions>
-        <Button onClick={onClose} disabled={isUpdating}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={isUpdating || items.length === 0}
-        >
-          {isUpdating ? (
-            <>
-              <CircularProgress size={20} sx={{ mr: 1 }} />
-              Saving...
-            </>
-          ) : (
-            'Save'
-          )}
+        <Button onClick={onClose} disabled={isBusy}>
+          Close
         </Button>
       </DialogActions>
     </Dialog>

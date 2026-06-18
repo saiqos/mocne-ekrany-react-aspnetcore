@@ -8,24 +8,37 @@ import {
   Box,
   CircularProgress,
 } from '@mui/material';
-import { useState } from 'react';
-import type { CreateCollectionPayload } from '../../services/collections';
+import { useEffect, useState } from 'react';
+import type { Collection } from '../../types';
+import type { UpdateCollectionPayload } from '../../services/collections';
 
-interface CreateCollectionDialogProps {
+interface EditCollectionDialogProps {
   open: boolean;
-  isCreating: boolean;
-  createCollection: (payload: CreateCollectionPayload) => Promise<void>;
+  collection: Collection | null;
+  isUpdating: boolean;
+  updateCollection: (
+    id: number,
+    payload: UpdateCollectionPayload,
+  ) => Promise<void>;
   onClose: () => void;
 }
 
-export const CreateCollectionDialog = ({
+export const EditCollectionDialog = ({
   open,
-  isCreating,
-  createCollection,
+  collection,
+  isUpdating,
+  updateCollection,
   onClose,
-}: CreateCollectionDialogProps) => {
+}: EditCollectionDialogProps) => {
   const [name, setName] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (collection && open) {
+      setName(collection.name);
+      setErrors({});
+    }
+  }, [collection, open]);
 
   const handleValidate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -40,9 +53,9 @@ export const CreateCollectionDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!handleValidate()) return;
+    if (!handleValidate() || !collection) return;
 
-    await createCollection({ name });
+    await updateCollection(collection.id, { name });
 
     setName('');
     setErrors({});
@@ -51,7 +64,7 @@ export const CreateCollectionDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Create Collection</DialogTitle>
+      <DialogTitle>Edit Collection</DialogTitle>
 
       <DialogContent>
         <Box sx={{ pt: 2 }}>
@@ -62,28 +75,28 @@ export const CreateCollectionDialog = ({
             onChange={(event) => setName(event.target.value)}
             error={!!errors.name}
             helperText={errors.name}
-            disabled={isCreating}
+            disabled={isUpdating}
           />
         </Box>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={isCreating}>
+        <Button onClick={onClose} disabled={isUpdating}>
           Cancel
         </Button>
 
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={isCreating}
+          disabled={isUpdating}
         >
-          {isCreating ? (
+          {isUpdating ? (
             <>
               <CircularProgress size={20} sx={{ mr: 1 }} />
-              Creating...
+              Updating...
             </>
           ) : (
-            'Create'
+            'Update'
           )}
         </Button>
       </DialogActions>

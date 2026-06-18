@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -15,45 +14,44 @@ import { SchedulesPage } from './pages/SchedulesPage';
 import { LogsPage } from './pages/LogsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ErrorSnackbar } from './components/common/ErrorSnackbar';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
-    },
-  },
-});
+import { UsersPage } from './pages/UsersPage';
+import { AdminRoute } from './components/auth/AdminRoute';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <Routes>
-            <Route path="/" element={<LoginPage />} />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DashboardPage />} />
+            <Route path="screens" element={<ScreensPage />} />
+            <Route path="images" element={<ImagesPage />} />
+            <Route path="collections" element={<CollectionsPage />} />
+            <Route path="schedules" element={<SchedulesPage />} />
+            <Route path="logs" element={<LogsPage />} />
             <Route
-              path="/dashboard"
+              path="users"
               element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
+                <AdminRoute>
+                  <UsersPage />
+                </AdminRoute>
               }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="screens" element={<ScreensPage />} />
-              <Route path="images" element={<ImagesPage />} />
-              <Route path="collections" element={<CollectionsPage />} />
-              <Route path="schedules" element={<SchedulesPage />} />
-              <Route path="logs" element={<LogsPage />} />
-            </Route>
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Router>
-        <ErrorSnackbar />
-      </ThemeProvider>
-    </QueryClientProvider>
+            />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Router>
+      <ErrorSnackbar />
+    </ThemeProvider>
   );
 }
 

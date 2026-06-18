@@ -9,22 +9,24 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { useScreens } from '../../hooks/useScreens';
 import type { Screen } from '../../types';
+import type { UpdateScreenPayload } from '../../services/screens';
 
 interface EditScreenDialogProps {
   open: boolean;
   screen: Screen | null;
+  isUpdating: boolean;
+  updateScreen: (id: number, payload: UpdateScreenPayload) => Promise<void>;
   onClose: () => void;
 }
 
 export const EditScreenDialog = ({
   open,
   screen,
+  isUpdating,
+  updateScreen,
   onClose,
 }: EditScreenDialogProps) => {
-  const { updateScreen, isUpdating } = useScreens();
-
   const [name, setName] = useState('');
   const [uniqueIdentifier, setUniqueIdentifier] = useState('');
   const [location, setLocation] = useState('');

@@ -2,25 +2,68 @@ import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
 import { CollectionList } from '../components/collections/CollectionList';
 import { CreateCollectionDialog } from '../components/collections/CreateCollectionDialog';
-import { CollectionItemsEditor } from '../components/collections/CollectionItemsEditor';
+import { EditCollectionDialog } from '../components/collections/EditCollectionDialog';
 import { DeleteCollectionDialog } from '../components/collections/DeleteCollectionDialog';
+import { CollectionItemsEditor } from '../components/collections/CollectionItemsEditor';
+import { useCollections } from '../hooks/useCollections';
 import type { Collection } from '../types';
 
 export const CollectionsPage = () => {
+  const {
+    collections,
+    isLoading,
+    isError,
+    error,
+
+    createCollection,
+    isCreating,
+
+    updateCollection,
+    isUpdating,
+
+    deleteCollection,
+    isDeleting,
+
+    getCollectionById,
+
+    addCollectionItem,
+    isAddingItem,
+
+    updateCollectionItem,
+    isUpdatingItem,
+
+    deleteCollectionItem,
+    isDeletingItem,
+  } = useCollections();
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editorDialogOpen, setEditorDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const [selectedCollection, setSelectedCollection] =
     useState<Collection | null>(null);
 
   const handleEditClick = (collection: Collection) => {
     setSelectedCollection(collection);
-    setEditorDialogOpen(true);
+    setEditDialogOpen(true);
+  };
+
+  const handleItemsClick = (collection: Collection) => {
+    setSelectedCollection(collection);
+    setItemsDialogOpen(true);
   };
 
   const handleDeleteClick = (collection: Collection) => {
     setSelectedCollection(collection);
     setDeleteDialogOpen(true);
+  };
+
+  const handleCloseSelectedDialog = () => {
+    setEditDialogOpen(false);
+    setItemsDialogOpen(false);
+    setDeleteDialogOpen(false);
+    setSelectedCollection(null);
   };
 
   return (
@@ -34,37 +77,56 @@ export const CollectionsPage = () => {
         }}
       >
         <Typography variant="h4">Collections</Typography>
+
         <Button variant="contained" onClick={() => setCreateDialogOpen(true)}>
           Create Collection
         </Button>
       </Box>
 
       <CollectionList
+        collections={collections}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
         onEditClick={handleEditClick}
+        onItemsClick={handleItemsClick}
         onDeleteClick={handleDeleteClick}
       />
 
       <CreateCollectionDialog
         open={createDialogOpen}
+        isCreating={isCreating}
+        createCollection={createCollection}
         onClose={() => setCreateDialogOpen(false)}
       />
 
-      <CollectionItemsEditor
-        open={editorDialogOpen}
+      <EditCollectionDialog
+        open={editDialogOpen}
         collection={selectedCollection}
-        onClose={() => {
-          setEditorDialogOpen(false);
-          setSelectedCollection(null);
-        }}
+        isUpdating={isUpdating}
+        updateCollection={updateCollection}
+        onClose={handleCloseSelectedDialog}
+      />
+
+      <CollectionItemsEditor
+        open={itemsDialogOpen}
+        collection={selectedCollection}
+        getCollectionById={getCollectionById}
+        addCollectionItem={addCollectionItem}
+        updateCollectionItem={updateCollectionItem}
+        deleteCollectionItem={deleteCollectionItem}
+        isAddingItem={isAddingItem}
+        isUpdatingItem={isUpdatingItem}
+        isDeletingItem={isDeletingItem}
+        onClose={handleCloseSelectedDialog}
       />
 
       <DeleteCollectionDialog
         open={deleteDialogOpen}
         collection={selectedCollection}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setSelectedCollection(null);
-        }}
+        isDeleting={isDeleting}
+        deleteCollection={deleteCollection}
+        onClose={handleCloseSelectedDialog}
       />
     </Box>
   );

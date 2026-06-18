@@ -9,16 +9,21 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useState } from 'react';
-import { useScreens } from '../../hooks/useScreens';
+import type { CreateScreenPayload } from '../../services/screens';
 
 interface AddScreenDialogProps {
   open: boolean;
+  isCreating: boolean;
+  createScreen: (payload: CreateScreenPayload) => Promise<void>;
   onClose: () => void;
 }
 
-export const AddScreenDialog = ({ open, onClose }: AddScreenDialogProps) => {
-  const { createScreen, isCreating } = useScreens();
-
+export const AddScreenDialog = ({
+  open,
+  isCreating,
+  createScreen,
+  onClose,
+}: AddScreenDialogProps) => {
   const [name, setName] = useState('');
   const [uniqueIdentifier, setUniqueIdentifier] = useState('');
   const [location, setLocation] = useState('');

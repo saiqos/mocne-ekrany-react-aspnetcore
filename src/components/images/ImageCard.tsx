@@ -18,12 +18,23 @@ interface ImageCardProps {
   onPreviewClick: (image: Image) => void;
 }
 
+const getImageUrl = (thumbnailPath: string | null) => {
+  if (!thumbnailPath) return null;
+
+  if (thumbnailPath.startsWith('http')) {
+    return thumbnailPath;
+  }
+
+  return `${import.meta.env.VITE_API_URL}${thumbnailPath}`;
+};
+
 export const ImageCard = ({
   image,
   onDeleteClick,
   onPreviewClick,
 }: ImageCardProps) => {
   const fileSizeInMB = (image.fileSize / 1024 / 1024).toFixed(2);
+  const imageUrl = getImageUrl(image.thumbnailPath);
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -41,16 +52,23 @@ export const ImageCard = ({
         }}
         onClick={() => onPreviewClick(image)}
       >
-        {/* Mock изображение - потом будет реальное */}
-        <Box
-          sx={{
-            textAlign: 'center',
-            color: '#999',
-          }}
-        >
-          <Typography variant="h6">📷</Typography>
-          <Typography variant="caption">Click to preview</Typography>
-        </Box>
+        {imageUrl ? (
+          <Box
+            component="img"
+            src={imageUrl}
+            alt={image.name}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <Box sx={{ textAlign: 'center', color: '#999' }}>
+            <Typography variant="h6">📷</Typography>
+            <Typography variant="caption">Click to preview</Typography>
+          </Box>
+        )}
       </CardMedia>
 
       <CardContent sx={{ flexGrow: 1 }}>
@@ -60,7 +78,7 @@ export const ImageCard = ({
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            marginBottom: 1,
+            mb: 1,
           }}
         >
           {image.name}
@@ -74,12 +92,13 @@ export const ImageCard = ({
         <Typography variant="caption" color="textSecondary">
           {image.width} x {image.height}px
         </Typography>
+
         <Typography
           variant="caption"
           color="textSecondary"
-          sx={{ display: 'block', marginTop: 1 }}
+          sx={{ display: 'block', mt: 1 }}
         >
-          By: {image.uploadedBy}
+          {new Date(image.createdAt).toLocaleString()}
         </Typography>
       </CardContent>
 
@@ -91,6 +110,7 @@ export const ImageCard = ({
         >
           <VisibilityIcon />
         </IconButton>
+
         <IconButton
           size="small"
           onClick={() => onDeleteClick(image)}

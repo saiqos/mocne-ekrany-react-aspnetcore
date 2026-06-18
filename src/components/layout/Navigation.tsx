@@ -6,8 +6,17 @@ import ImageIcon from '@mui/icons-material/Image';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import PeopleIcon from '@mui/icons-material/People';
+import { useAuthStore } from '../../store/authStore';
 
-const menuItems = [
+type MenuItem = {
+  text: string;
+  icon: React.ReactNode;
+  path: string;
+  adminOnly?: boolean;
+};
+
+const menuItems: MenuItem[] = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
   { text: 'Screens', icon: <ScreenshotIcon />, path: '/dashboard/screens' },
   { text: 'Images', icon: <ImageIcon />, path: '/dashboard/images' },
@@ -18,10 +27,25 @@ const menuItems = [
   },
   { text: 'Schedules', icon: <ScheduleIcon />, path: '/dashboard/schedules' },
   { text: 'Logs', icon: <AssignmentIcon />, path: '/dashboard/logs' },
+  {
+    text: 'Users',
+    icon: <PeopleIcon />,
+    path: '/dashboard/users',
+    adminOnly: true,
+  },
 ];
 
 export const Navigation = () => {
   const location = useLocation();
+  const { user } = useAuthStore();
+
+  const isAdmin = user?.role === 'Admin';
+
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!item.adminOnly) return true;
+
+    return isAdmin;
+  });
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -29,7 +53,7 @@ export const Navigation = () => {
 
   return (
     <List>
-      {menuItems.map((item) => {
+      {visibleMenuItems.map((item) => {
         const active = isActive(item.path);
 
         return (
@@ -59,6 +83,7 @@ export const Navigation = () => {
             >
               {item.icon}
             </ListItemIcon>
+
             <ListItemText
               primary={item.text}
               sx={{

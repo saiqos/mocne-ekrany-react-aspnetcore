@@ -17,27 +17,30 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import { useSchedules } from '../../hooks/useSchedules';
-import { useScreens } from '../../hooks/useScreens';
-import { useImages } from '../../hooks/useImages';
+import type { Image, Screen } from '../../types';
+import type { CreateSchedulePayload } from '../../services/schedules';
 
 interface CreateScheduleDialogProps {
   open: boolean;
+  screens: Screen[];
+  images: Image[];
+  isCreating: boolean;
+  createSchedule: (payload: CreateSchedulePayload) => Promise<void>;
   onClose: () => void;
 }
 
 export const CreateScheduleDialog = ({
   open,
+  screens,
+  images,
+  isCreating,
+  createSchedule,
   onClose,
 }: CreateScheduleDialogProps) => {
-  const { createSchedule, isCreating } = useSchedules();
-  const { screens } = useScreens();
-  const { images } = useImages();
-
   const [formData, setFormData] = useState({
     name: '',
-    screenId: '',
-    imageId: '',
+    screenId: null as number | null,
+    imageId: null as number | null,
     startDate: '',
     startTime: '00:00',
     endDate: '',
@@ -48,8 +51,24 @@ export const CreateScheduleDialog = ({
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      screenId: null,
+      imageId: null,
+      startDate: '',
+      startTime: '00:00',
+      endDate: '',
+      endTime: '23:59',
+      isRecurring: false,
+      priority: 1,
+    });
+    setErrors({});
+  };
+
   const handleValidate = () => {
     const newErrors: { [key: string]: string } = {};
+
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.screenId) newErrors.screenId = 'Screen is required';
     if (!formData.imageId) newErrors.imageId = 'Image is required';
@@ -61,57 +80,50 @@ export const CreateScheduleDialog = ({
     );
     const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
-    if (startDateTime >= endDateTime) {
+    if (
+      formData.startDate &&
+      formData.endDate &&
+      startDateTime >= endDateTime
+    ) {
       newErrors.endDate = 'End date/time must be after start date/time';
     }
 
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!handleValidate()) return;
+  const handleSubmit = async () => {
+    if (!handleValidate() || !formData.screenId || !formData.imageId) return;
 
     const startDateTime = new Date(
       `${formData.startDate}T${formData.startTime}`,
     ).toISOString();
+
     const endDateTime = new Date(
       `${formData.endDate}T${formData.endTime}`,
     ).toISOString();
 
-    createSchedule(
-      {
-        name: formData.name,
-        screenId: formData.screenId,
-        imageId: formData.imageId,
-        startDate: startDateTime,
-        endDate: endDateTime,
-        isRecurring: formData.isRecurring,
-        priority: formData.priority,
-      },
-      {
-        onSuccess: () => {
-          setFormData({
-            name: '',
-            screenId: '',
-            imageId: '',
-            startDate: '',
-            startTime: '00:00',
-            endDate: '',
-            endTime: '23:59',
-            isRecurring: false,
-            priority: 1,
-          });
-          setErrors({});
-          onClose();
-        },
-      },
-    );
+    await createSchedule({
+      name: formData.name,
+      screenId: formData.screenId,
+      imageId: formData.imageId,
+      collectionId: null,
+      startDate: startDateTime,
+      endDate: endDateTime,
+      isRecurring: formData.isRecurring,
+      recurrencePattern: null,
+      priority: formData.priority,
+    });
+
+    resetForm();
+    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Create Schedule</DialogTitle>
+
       <DialogContent>
         <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -127,9 +139,11 @@ export const CreateScheduleDialog = ({
           <Autocomplete
             options={screens}
             getOptionLabel={(option) => option.name}
-            value={screens.find((s) => s.id === formData.screenId) || null}
+            value={
+              screens.find((screen) => screen.id === formData.screenId) || null
+            }
             onChange={(_, value) =>
-              setFormData({ ...formData, screenId: value?.id || '' })
+              setFormData({ ...formData, screenId: value?.id ?? null })
             }
             renderInput={(params) => (
               <TextField
@@ -145,9 +159,11 @@ export const CreateScheduleDialog = ({
           <Autocomplete
             options={images}
             getOptionLabel={(option) => option.name}
-            value={images.find((i) => i.id === formData.imageId) || null}
+            value={
+              images.find((image) => image.id === formData.imageId) || null
+            }
             onChange={(_, value) =>
-              setFormData({ ...formData, imageId: value?.id || '' })
+              setFormData({ ...formData, imageId: value?.id ?? null })
             }
             renderInput={(params) => (
               <TextField
@@ -178,10 +194,10 @@ export const CreateScheduleDialog = ({
                 helperText={errors.startDate}
                 disabled={isCreating}
                 fullWidth
-                variant="outlined"
                 size="small"
               />
             </Box>
+
             <Box>
               <Typography
                 variant="caption"
@@ -197,7 +213,6 @@ export const CreateScheduleDialog = ({
                 }
                 disabled={isCreating}
                 fullWidth
-                variant="outlined"
                 size="small"
               />
             </Box>
@@ -221,10 +236,10 @@ export const CreateScheduleDialog = ({
                 helperText={errors.endDate}
                 disabled={isCreating}
                 fullWidth
-                variant="outlined"
                 size="small"
               />
             </Box>
+
             <Box>
               <Typography
                 variant="caption"
@@ -240,7 +255,6 @@ export const CreateScheduleDialog = ({
                 }
                 disabled={isCreating}
                 fullWidth
-                variant="outlined"
                 size="small"
               />
             </Box>
@@ -252,7 +266,7 @@ export const CreateScheduleDialog = ({
               value={formData.priority}
               label="Priority"
               onChange={(e) =>
-                setFormData({ ...formData, priority: e.target.value as number })
+                setFormData({ ...formData, priority: Number(e.target.value) })
               }
               disabled={isCreating}
             >
@@ -276,10 +290,12 @@ export const CreateScheduleDialog = ({
           />
         </Box>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose} disabled={isCreating}>
           Cancel
         </Button>
+
         <Button
           onClick={handleSubmit}
           variant="contained"

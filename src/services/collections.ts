@@ -1,49 +1,74 @@
-import type { Collection } from '../types';
+import type { Collection, CollectionDetails, CollectionItem } from '../types';
+import axiosClient from './axiosClient';
 
-const mockCollections: Collection[] = [
-    {
-        id: '1',
-        name: 'Monday Schedule',
-        createdAt: new Date().toISOString(),
-        uploadedBy: 'admin',
-        items: [
-            { id: '1', collectionId: '1', imageId: '1', order: 0, displayDuration: 30 },
-            { id: '2', collectionId: '1', imageId: '2', order: 1, displayDuration: 30 },
-        ],
-    },
-];
+export interface CreateCollectionPayload {
+    name: string;
+}
+
+export interface UpdateCollectionPayload {
+    name: string;
+}
+
+export interface CreateCollectionItemPayload {
+    imageId: number;
+    order: number;
+    displayDurationSeconds: number;
+}
+
+export interface UpdateCollectionItemPayload {
+    order: number;
+    displayDurationSeconds: number;
+}
 
 export const collectionService = {
     getAll: async (): Promise<Collection[]> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockCollections;
+        const response = await axiosClient.get<Collection[]>('/api/collections');
+        return response.data;
     },
 
-    create: async (payload: { name: string }): Promise<Collection> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const newCollection: Collection = {
-            id: String(mockCollections.length + 1),
-            name: payload.name,
-            createdAt: new Date().toISOString(),
-            uploadedBy: 'admin',
-            items: [],
-        };
-        mockCollections.push(newCollection);
-        return newCollection;
+    getById: async (id: number): Promise<CollectionDetails> => {
+        const response = await axiosClient.get<CollectionDetails>(`/api/collections/${id}`);
+        return response.data;
     },
 
-    update: async (id: string, payload: Partial<Collection>): Promise<Collection> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const collection = mockCollections.find(c => c.id === id);
-        if (!collection) throw new Error('Collection not found');
-        Object.assign(collection, payload);
-        return collection;
+    create: async (payload: CreateCollectionPayload): Promise<Collection> => {
+        const response = await axiosClient.post<Collection>('/api/collections', payload);
+        return response.data;
     },
 
-    delete: async (id: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const index = mockCollections.findIndex(c => c.id === id);
-        if (index === -1) throw new Error('Collection not found');
-        mockCollections.splice(index, 1);
+    update: async (id: number, payload: UpdateCollectionPayload): Promise<Collection> => {
+        const response = await axiosClient.put<Collection>(`/api/collections/${id}`, payload);
+        return response.data;
+    },
+
+    delete: async (id: number): Promise<void> => {
+        await axiosClient.delete(`/api/collections/${id}`);
+    },
+
+    addItem: async (
+        collectionId: number,
+        payload: CreateCollectionItemPayload,
+    ): Promise<CollectionItem> => {
+        const response = await axiosClient.post<CollectionItem>(
+            `/api/collections/${collectionId}/items`,
+            payload,
+        );
+
+        return response.data;
+    },
+
+    updateItem: async (
+        collectionId: number,
+        itemId: number,
+        payload: UpdateCollectionItemPayload,
+    ): Promise<void> => {
+        await axiosClient.put(
+            `/api/collections/${collectionId}/items/${itemId}`,
+            payload,
+        );
+    },
+
+    deleteItem: async (collectionId: number, itemId: number): Promise<void> => {
+        await axiosClient.delete(`/api/collections/${collectionId}/items/${itemId}`);
     },
 };

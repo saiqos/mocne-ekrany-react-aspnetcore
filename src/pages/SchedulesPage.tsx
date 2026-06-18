@@ -4,9 +4,31 @@ import { ScheduleTable } from '../components/schedules/ScheduleTable';
 import { CreateScheduleDialog } from '../components/schedules/CreateScheduleDialog';
 import { EditScheduleDialog } from '../components/schedules/EditScheduleDialog';
 import { DeleteScheduleDialog } from '../components/schedules/DeleteScheduleDialog';
+import { useSchedules } from '../hooks/useSchedules';
+import { useScreens } from '../hooks/useScreens';
+import { useImages } from '../hooks/useImages';
 import type { Schedule } from '../types';
 
 export const SchedulesPage = () => {
+  const {
+    schedules,
+    isLoading,
+    isError,
+    error,
+
+    createSchedule,
+    isCreating,
+
+    updateSchedule,
+    isUpdating,
+
+    deleteSchedule,
+    isDeleting,
+  } = useSchedules();
+
+  const { screens } = useScreens();
+  const { images } = useImages();
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -35,24 +57,39 @@ export const SchedulesPage = () => {
         }}
       >
         <Typography variant="h4">Schedules</Typography>
+
         <Button variant="contained" onClick={() => setCreateDialogOpen(true)}>
           Create Schedule
         </Button>
       </Box>
 
       <ScheduleTable
+        schedules={schedules}
+        screens={screens}
+        images={images}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
       />
 
       <CreateScheduleDialog
         open={createDialogOpen}
+        screens={screens}
+        images={images}
+        isCreating={isCreating}
+        createSchedule={createSchedule}
         onClose={() => setCreateDialogOpen(false)}
       />
 
       <EditScheduleDialog
         open={editDialogOpen}
         schedule={selectedSchedule}
+        screens={screens}
+        images={images}
+        isUpdating={isUpdating}
+        updateSchedule={updateSchedule}
         onClose={() => {
           setEditDialogOpen(false);
           setSelectedSchedule(null);
@@ -62,6 +99,8 @@ export const SchedulesPage = () => {
       <DeleteScheduleDialog
         open={deleteDialogOpen}
         schedule={selectedSchedule}
+        isDeleting={isDeleting}
+        deleteSchedule={deleteSchedule}
         onClose={() => {
           setDeleteDialogOpen(false);
           setSelectedSchedule(null);

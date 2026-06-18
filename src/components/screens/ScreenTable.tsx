@@ -15,27 +15,29 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import { useScreens } from '../../hooks/useScreens';
 import type { Screen } from '../../types';
 
 interface ScreenTableProps {
+  screens: Screen[];
+  isLoading: boolean;
+  isError: boolean;
+  error: string | null;
+  isControllingPower: boolean;
+  powerControl: (id: number, action: 'on' | 'off') => Promise<void>;
   onEditClick: (screen: Screen) => void;
   onDeleteClick: (screen: Screen) => void;
 }
 
 export const ScreenTable = ({
+  screens,
+  isLoading,
+  isError,
+  error,
+  isControllingPower,
+  powerControl,
   onEditClick,
   onDeleteClick,
 }: ScreenTableProps) => {
-  const {
-    screens,
-    isLoading,
-    isError,
-    error,
-    powerControl,
-    isControllingPower,
-  } = useScreens();
-
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>

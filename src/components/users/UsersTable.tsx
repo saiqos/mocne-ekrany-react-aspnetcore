@@ -12,30 +12,30 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import PasswordIcon from '@mui/icons-material/Password';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ImageIcon from '@mui/icons-material/Image';
-import type { Collection } from '../../types';
+import type { UserDto } from '../../types';
 
-interface CollectionListProps {
-  collections: Collection[];
+interface UsersTableProps {
+  users: UserDto[];
   isLoading: boolean;
   isError: boolean;
   error: string | null;
-  onEditClick: (collection: Collection) => void;
-  onItemsClick: (collection: Collection) => void;
-  onDeleteClick: (collection: Collection) => void;
+  onRoleClick: (user: UserDto) => void;
+  onPasswordClick: (user: UserDto) => void;
+  onDeleteClick: (user: UserDto) => void;
 }
 
-export const CollectionList = ({
-  collections,
+export const UsersTable = ({
+  users,
   isLoading,
   isError,
   error,
-  onEditClick,
-  onItemsClick,
+  onRoleClick,
+  onPasswordClick,
   onDeleteClick,
-}: CollectionListProps) => {
+}: UsersTableProps) => {
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -45,17 +45,11 @@ export const CollectionList = ({
   }
 
   if (isError) {
-    return (
-      <Alert severity="error">{error || 'Failed to load collections'}</Alert>
-    );
+    return <Alert severity="error">{error || 'Failed to load users'}</Alert>;
   }
 
-  if (collections.length === 0) {
-    return (
-      <Alert severity="info">
-        No collections yet. Create your first collection!
-      </Alert>
-    );
+  if (users.length === 0) {
+    return <Alert severity="info">No users found</Alert>;
   }
 
   return (
@@ -63,52 +57,52 @@ export const CollectionList = ({
       <Table>
         <TableHead>
           <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-            <TableCell>Name</TableCell>
-            <TableCell>Items</TableCell>
+            <TableCell>Username</TableCell>
+            <TableCell>Role</TableCell>
             <TableCell>Created At</TableCell>
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
 
         <TableBody>
-          {collections.map((collection) => (
-            <TableRow key={collection.id}>
-              <TableCell sx={{ fontWeight: 500 }}>{collection.name}</TableCell>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell sx={{ fontWeight: 500 }}>{user.username}</TableCell>
 
               <TableCell>
                 <Chip
-                  label={collection.itemCount}
+                  label={user.role}
                   size="small"
-                  color={collection.itemCount > 0 ? 'primary' : 'default'}
+                  color={user.role === 'Admin' ? 'primary' : 'default'}
                 />
               </TableCell>
 
               <TableCell sx={{ fontSize: '0.875rem' }}>
-                {new Date(collection.createdAt).toLocaleString()}
+                {new Date(user.createdAt).toLocaleString()}
               </TableCell>
 
               <TableCell align="right">
                 <IconButton
                   size="small"
-                  onClick={() => onItemsClick(collection)}
-                  title="Edit items"
+                  onClick={() => onRoleClick(user)}
+                  title="Change role"
                   color="primary"
                 >
-                  <ImageIcon />
+                  <AdminPanelSettingsIcon />
                 </IconButton>
 
                 <IconButton
                   size="small"
-                  onClick={() => onEditClick(collection)}
-                  title="Edit collection"
+                  onClick={() => onPasswordClick(user)}
+                  title="Change password"
                 >
-                  <EditIcon />
+                  <PasswordIcon />
                 </IconButton>
 
                 <IconButton
                   size="small"
-                  onClick={() => onDeleteClick(collection)}
-                  title="Delete"
+                  onClick={() => onDeleteClick(user)}
+                  title="Delete user"
                   color="error"
                 >
                   <DeleteIcon />

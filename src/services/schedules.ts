@@ -1,46 +1,46 @@
 import type { Schedule } from '../types';
+import axiosClient from './axiosClient';
 
-const mockSchedules: Schedule[] = [
-    {
-        id: '1',
-        name: 'Morning Schedule',
-        imageId: '1',
-        screenId: '1',
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 86400000).toISOString(),
-        isRecurring: true,
-        priority: 1,
-    },
-];
+export interface CreateSchedulePayload {
+    name: string;
+    imageId: number | null;
+    collectionId: number | null;
+    screenId: number;
+    startDate: string;
+    endDate: string;
+    isRecurring: boolean;
+    recurrencePattern: string | null;
+    priority: number;
+}
+
+export type UpdateSchedulePayload = CreateSchedulePayload;
 
 export const scheduleService = {
     getAll: async (): Promise<Schedule[]> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return mockSchedules;
+        const response = await axiosClient.get<Schedule[]>('/api/schedules');
+
+        return response.data;
     },
 
-    create: async (payload: Omit<Schedule, 'id'>): Promise<Schedule> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const newSchedule: Schedule = {
-            ...payload,
-            id: String(mockSchedules.length + 1),
-        };
-        mockSchedules.push(newSchedule);
-        return newSchedule;
+    getById: async (id: number): Promise<Schedule> => {
+        const response = await axiosClient.get<Schedule>(`/api/schedules/${id}`);
+
+        return response.data;
     },
 
-    update: async (id: string, payload: Partial<Schedule>): Promise<Schedule> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const schedule = mockSchedules.find(s => s.id === id);
-        if (!schedule) throw new Error('Schedule not found');
-        Object.assign(schedule, payload);
-        return schedule;
+    create: async (payload: CreateSchedulePayload): Promise<Schedule> => {
+        const response = await axiosClient.post<Schedule>('/api/schedules', payload);
+
+        return response.data;
     },
 
-    delete: async (id: string): Promise<void> => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const index = mockSchedules.findIndex(s => s.id === id);
-        if (index === -1) throw new Error('Schedule not found');
-        mockSchedules.splice(index, 1);
+    update: async (id: number, payload: UpdateSchedulePayload): Promise<Schedule> => {
+        const response = await axiosClient.put<Schedule>(`/api/schedules/${id}`, payload);
+
+        return response.data;
+    },
+
+    delete: async (id: number): Promise<void> => {
+        await axiosClient.delete(`/api/schedules/${id}`);
     },
 };

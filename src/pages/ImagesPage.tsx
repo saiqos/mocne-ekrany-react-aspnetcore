@@ -1,4 +1,4 @@
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography, Grid, CircularProgress, Alert } from '@mui/material';
 import { useState } from 'react';
 import { ImageUploadZone } from '../components/images/ImageUploadZone';
 import { ImageCard } from '../components/images/ImageCard';
@@ -8,7 +8,17 @@ import { useImages } from '../hooks/useImages';
 import type { Image } from '../types';
 
 export const ImagesPage = () => {
-  const { images, isLoading } = useImages();
+  const {
+    images,
+    isLoading,
+    isError,
+    error,
+    uploadImage,
+    isUploading,
+    deleteImage,
+    isDeleting,
+  } = useImages();
+
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
@@ -33,7 +43,8 @@ export const ImagesPage = () => {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Upload New Images
         </Typography>
-        <ImageUploadZone />
+
+        <ImageUploadZone uploadImage={uploadImage} isUploading={isUploading} />
       </Box>
 
       <Box>
@@ -41,11 +52,23 @@ export const ImagesPage = () => {
           Image Gallery ({images.length})
         </Typography>
 
-        {images.length === 0 ? (
+        {isLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {isError && (
+          <Alert severity="error">{error || 'Failed to load images'}</Alert>
+        )}
+
+        {!isLoading && !isError && images.length === 0 && (
           <Typography color="textSecondary">
             No images yet. Upload your first image!
           </Typography>
-        ) : (
+        )}
+
+        {!isLoading && !isError && images.length > 0 && (
           <Grid container spacing={2}>
             {images.map((image) => (
               <Grid item size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={image.id}>
@@ -72,6 +95,8 @@ export const ImagesPage = () => {
       <DeleteImageDialog
         open={deleteDialogOpen}
         image={selectedImage}
+        isDeleting={isDeleting}
+        deleteImage={deleteImage}
         onClose={() => {
           setDeleteDialogOpen(false);
           setSelectedImage(null);
