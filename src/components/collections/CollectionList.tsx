@@ -15,6 +15,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
+import EventIcon from '@mui/icons-material/Event';
 import type { Collection } from '../../types';
 
 interface CollectionListProps {
@@ -24,6 +25,7 @@ interface CollectionListProps {
   error: string | null;
   onEditClick: (collection: Collection) => void;
   onItemsClick: (collection: Collection) => void;
+  onScheduleClick: (collection: Collection) => void;
   onDeleteClick: (collection: Collection) => void;
 }
 
@@ -34,6 +36,7 @@ export const CollectionList = ({
   error,
   onEditClick,
   onItemsClick,
+  onScheduleClick,
   onDeleteClick,
 }: CollectionListProps) => {
   if (isLoading) {
@@ -95,6 +98,15 @@ export const CollectionList = ({
                   color="primary"
                 >
                   <ImageIcon />
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  onClick={() => onScheduleClick(collection)}
+                  title="Schedule collection"
+                  color="success"
+                >
+                  <EventIcon />
                 </IconButton>
 
                 <IconButton

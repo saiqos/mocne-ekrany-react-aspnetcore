@@ -17,13 +17,16 @@ import {
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
-import type { Image, Screen } from '../../types';
+import type { Collection, Image, Screen } from '../../types'; // changed: added Collection type
 import type { CreateSchedulePayload } from '../../services/schedules';
+
+type ContentType = 'image' | 'collection'; // added: schedule can be created for image or collection
 
 interface CreateScheduleDialogProps {
   open: boolean;
   screens: Screen[];
   images: Image[];
+  collections: Collection[]; // added: collections list for collection schedules
   isCreating: boolean;
   createSchedule: (payload: CreateSchedulePayload) => Promise<void>;
   onClose: () => void;
@@ -33,6 +36,7 @@ export const CreateScheduleDialog = ({
   open,
   screens,
   images,
+  collections, // added: receive collections from parent
   isCreating,
   createSchedule,
   onClose,
@@ -40,7 +44,9 @@ export const CreateScheduleDialog = ({
   const [formData, setFormData] = useState({
     name: '',
     screenId: null as number | null,
+    contentType: 'image' as ContentType, // added: selected content type
     imageId: null as number | null,
+    collectionId: null as number | null, // added: selected collection id
     startDate: '',
     startTime: '00:00',
     endDate: '',
@@ -55,7 +61,9 @@ export const CreateScheduleDialog = ({
     setFormData({
       name: '',
       screenId: null,
+      contentType: 'image', // added: reset content type
       imageId: null,
+      collectionId: null, // added: reset selected collection
       startDate: '',
       startTime: '00:00',
       endDate: '',
@@ -71,7 +79,15 @@ export const CreateScheduleDialog = ({
 
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.screenId) newErrors.screenId = 'Screen is required';
-    if (!formData.imageId) newErrors.imageId = 'Image is required';
+
+    if (formData.contentType === 'image' && !formData.imageId) {
+      newErrors.imageId = 'Image is required'; // changed: image required only for image schedule
+    }
+
+    if (formData.contentType === 'collection' && !formData.collectionId) {
+      newErrors.collectionId = 'Collection is required'; // added: collection required only for collection schedule
+    }
+
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
     if (!formData.endDate) newErrors.endDate = 'End date is required';
 
@@ -94,7 +110,7 @@ export const CreateScheduleDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (!handleValidate() || !formData.screenId || !formData.imageId) return;
+    if (!handleValidate() || !formData.screenId) return; // changed: imageId is no longer always required
 
     const startDateTime = new Date(
       `${formData.startDate}T${formData.startTime}`,
@@ -107,8 +123,9 @@ export const CreateScheduleDialog = ({
     await createSchedule({
       name: formData.name,
       screenId: formData.screenId,
-      imageId: formData.imageId,
-      collectionId: null,
+      imageId: formData.contentType === 'image' ? formData.imageId : null, // changed: set imageId only for image schedule
+      collectionId:
+        formData.contentType === 'collection' ? formData.collectionId : null, // added: set collectionId only for collection schedule
       startDate: startDateTime,
       endDate: endDateTime,
       isRecurring: formData.isRecurring,
@@ -156,25 +173,72 @@ export const CreateScheduleDialog = ({
             )}
           />
 
-          <Autocomplete
-            options={images}
-            getOptionLabel={(option) => option.name}
-            value={
-              images.find((image) => image.id === formData.imageId) || null
-            }
-            onChange={(_, value) =>
-              setFormData({ ...formData, imageId: value?.id ?? null })
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select Image"
-                error={!!errors.imageId}
-                helperText={errors.imageId}
-                disabled={isCreating}
-              />
-            )}
-          />
+          <FormControl fullWidth>
+            <InputLabel>Content Type</InputLabel>
+
+            <Select
+              value={formData.contentType}
+              label="Content Type"
+              disabled={isCreating}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  contentType: e.target.value as ContentType, // added: switch between image and collection
+                  imageId: null, // added: clear image when type changes
+                  collectionId: null, // added: clear collection when type changes
+                })
+              }
+            >
+              <MenuItem value="image">Image</MenuItem>
+              <MenuItem value="collection">Collection</MenuItem>
+            </Select>
+          </FormControl>
+
+          {formData.contentType === 'image' && (
+            <Autocomplete
+              options={images}
+              getOptionLabel={(option) => option.name}
+              value={
+                images.find((image) => image.id === formData.imageId) || null
+              }
+              onChange={(_, value) =>
+                setFormData({ ...formData, imageId: value?.id ?? null })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Image"
+                  error={!!errors.imageId}
+                  helperText={errors.imageId}
+                  disabled={isCreating}
+                />
+              )}
+            />
+          )}
+
+          {formData.contentType === 'collection' && (
+            <Autocomplete
+              options={collections}
+              getOptionLabel={(option) => option.name}
+              value={
+                collections.find(
+                  (collection) => collection.id === formData.collectionId,
+                ) || null
+              }
+              onChange={(_, value) =>
+                setFormData({ ...formData, collectionId: value?.id ?? null })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Collection"
+                  error={!!errors.collectionId}
+                  helperText={errors.collectionId}
+                  disabled={isCreating}
+                />
+              )}
+            />
+          )}
 
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
             <Box>
@@ -184,6 +248,7 @@ export const CreateScheduleDialog = ({
               >
                 Start Date
               </Typography>
+
               <TextField
                 type="date"
                 value={formData.startDate}
@@ -205,6 +270,7 @@ export const CreateScheduleDialog = ({
               >
                 Start Time
               </Typography>
+
               <TextField
                 type="time"
                 value={formData.startTime}
@@ -226,6 +292,7 @@ export const CreateScheduleDialog = ({
               >
                 End Date
               </Typography>
+
               <TextField
                 type="date"
                 value={formData.endDate}
@@ -247,6 +314,7 @@ export const CreateScheduleDialog = ({
               >
                 End Time
               </Typography>
+
               <TextField
                 type="time"
                 value={formData.endTime}
@@ -262,6 +330,7 @@ export const CreateScheduleDialog = ({
 
           <FormControl fullWidth>
             <InputLabel>Priority</InputLabel>
+
             <Select
               value={formData.priority}
               label="Priority"

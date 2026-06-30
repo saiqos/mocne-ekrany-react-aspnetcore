@@ -7,6 +7,7 @@ import { DeleteScheduleDialog } from '../components/schedules/DeleteScheduleDial
 import { useSchedules } from '../hooks/useSchedules';
 import { useScreens } from '../hooks/useScreens';
 import { useImages } from '../hooks/useImages';
+import { useCollections } from '../hooks/useCollections'; // added: load collections for schedules
 import type { Schedule } from '../types';
 
 export const SchedulesPage = () => {
@@ -28,6 +29,7 @@ export const SchedulesPage = () => {
 
   const { screens } = useScreens();
   const { images } = useImages();
+  const { collections } = useCollections(); // added: collections can now be scheduled too
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -67,6 +69,7 @@ export const SchedulesPage = () => {
         schedules={schedules}
         screens={screens}
         images={images}
+        collections={collections} // added: table can show collection name
         isLoading={isLoading}
         isError={isError}
         error={error}
@@ -78,6 +81,7 @@ export const SchedulesPage = () => {
         open={createDialogOpen}
         screens={screens}
         images={images}
+        collections={collections} // added: dialog can create collection schedule
         isCreating={isCreating}
         createSchedule={createSchedule}
         onClose={() => setCreateDialogOpen(false)}
@@ -88,6 +92,7 @@ export const SchedulesPage = () => {
         schedule={selectedSchedule}
         screens={screens}
         images={images}
+        collections={collections} // added: dialog can edit collection schedule
         isUpdating={isUpdating}
         updateSchedule={updateSchedule}
         onClose={() => {

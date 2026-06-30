@@ -5,7 +5,10 @@ import { CreateCollectionDialog } from '../components/collections/CreateCollecti
 import { EditCollectionDialog } from '../components/collections/EditCollectionDialog';
 import { DeleteCollectionDialog } from '../components/collections/DeleteCollectionDialog';
 import { CollectionItemsEditor } from '../components/collections/CollectionItemsEditor';
+import { ScheduleCollectionDialog } from '../components/collections/ScheduleCollectionDialog';
 import { useCollections } from '../hooks/useCollections';
+import { useSchedules } from '../hooks/useSchedules';
+import { useScreens } from '../hooks/useScreens';
 import type { Collection } from '../types';
 
 export const CollectionsPage = () => {
@@ -16,7 +19,7 @@ export const CollectionsPage = () => {
     error,
 
     createCollection,
-    isCreating,
+    isCreating: isCreatingCollection,
 
     updateCollection,
     isUpdating,
@@ -36,9 +39,14 @@ export const CollectionsPage = () => {
     isDeletingItem,
   } = useCollections();
 
+  const { screens } = useScreens();
+
+  const { createSchedule, isCreating: isCreatingSchedule } = useSchedules();
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [selectedCollection, setSelectedCollection] =
@@ -54,6 +62,11 @@ export const CollectionsPage = () => {
     setItemsDialogOpen(true);
   };
 
+  const handleScheduleClick = (collection: Collection) => {
+    setSelectedCollection(collection);
+    setScheduleDialogOpen(true);
+  };
+
   const handleDeleteClick = (collection: Collection) => {
     setSelectedCollection(collection);
     setDeleteDialogOpen(true);
@@ -62,6 +75,7 @@ export const CollectionsPage = () => {
   const handleCloseSelectedDialog = () => {
     setEditDialogOpen(false);
     setItemsDialogOpen(false);
+    setScheduleDialogOpen(false);
     setDeleteDialogOpen(false);
     setSelectedCollection(null);
   };
@@ -90,12 +104,13 @@ export const CollectionsPage = () => {
         error={error}
         onEditClick={handleEditClick}
         onItemsClick={handleItemsClick}
+        onScheduleClick={handleScheduleClick}
         onDeleteClick={handleDeleteClick}
       />
 
       <CreateCollectionDialog
         open={createDialogOpen}
-        isCreating={isCreating}
+        isCreating={isCreatingCollection}
         createCollection={createCollection}
         onClose={() => setCreateDialogOpen(false)}
       />
@@ -118,6 +133,15 @@ export const CollectionsPage = () => {
         isAddingItem={isAddingItem}
         isUpdatingItem={isUpdatingItem}
         isDeletingItem={isDeletingItem}
+        onClose={handleCloseSelectedDialog}
+      />
+
+      <ScheduleCollectionDialog
+        open={scheduleDialogOpen}
+        collection={selectedCollection}
+        screens={screens}
+        isCreating={isCreatingSchedule}
+        createSchedule={createSchedule}
         onClose={handleCloseSelectedDialog}
       />
 

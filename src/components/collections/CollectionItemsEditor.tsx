@@ -19,6 +19,8 @@ import {
 import { useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useImages } from '../../hooks/useImages';
 import type {
   Collection,
@@ -69,6 +71,7 @@ export const CollectionItemsEditor = ({
   const [displayDuration, setDisplayDuration] = useState('30');
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
+  const [movingItemId, setMovingItemId] = useState<number | null>(null);
 
   const loadCollectionDetails = async () => {
     if (!collection) return;
@@ -142,8 +145,44 @@ export const CollectionItemsEditor = ({
     await loadCollectionDetails();
   };
 
+  const handleMoveItem = async (
+    item: CollectionItem,
+    currentIndex: number,
+    direction: 'up' | 'down',
+  ) => {
+    if (!collection) return;
+
+    const targetIndex =
+      direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const targetItem = items[targetIndex];
+
+    if (!targetItem) return;
+
+    setMovingItemId(item.id);
+
+    try {
+      await updateCollectionItem(collection.id, item.id, {
+        order: targetItem.order,
+        displayDurationSeconds: item.displayDurationSeconds,
+      });
+
+      await updateCollectionItem(collection.id, targetItem.id, {
+        order: item.order,
+        displayDurationSeconds: targetItem.displayDurationSeconds,
+      });
+
+      await loadCollectionDetails();
+    } finally {
+      setMovingItemId(null);
+    }
+  };
+
   const isBusy =
-    isLoadingDetails || isAddingItem || isUpdatingItem || isDeletingItem;
+    isLoadingDetails ||
+    isAddingItem ||
+    isUpdatingItem ||
+    isDeletingItem ||
+    movingItemId !== null;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -228,7 +267,31 @@ export const CollectionItemsEditor = ({
                     }
                     secondary={`Order: ${item.order}`}
                   />
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      mr: 2,
+                    }}
+                  >
+                    <IconButton
+                      size="small"
+                      onClick={() => handleMoveItem(item, index, 'up')}
+                      disabled={index === 0 || isBusy}
+                      title="Move up"
+                    >
+                      <KeyboardArrowUpIcon fontSize="small" />
+                    </IconButton>
 
+                    <IconButton
+                      size="small"
+                      onClick={() => handleMoveItem(item, index, 'down')}
+                      disabled={index === items.length - 1 || isBusy}
+                      title="Move down"
+                    >
+                      <KeyboardArrowDownIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                   <Box
                     sx={{
                       display: 'flex',

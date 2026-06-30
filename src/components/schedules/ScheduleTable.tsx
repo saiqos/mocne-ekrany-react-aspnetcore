@@ -14,12 +14,13 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import type { Image, Schedule, Screen } from '../../types';
+import type { Collection, Image, Schedule, Screen } from '../../types'; // changed: added Collection type
 
 interface ScheduleTableProps {
   schedules: Schedule[];
   screens: Screen[];
   images: Image[];
+  collections: Collection[]; // added: needed to show collection names
   isLoading: boolean;
   isError: boolean;
   error: string | null;
@@ -31,6 +32,7 @@ export const ScheduleTable = ({
   schedules,
   screens,
   images,
+  collections, // added: receive collections from parent
   isLoading,
   isError,
   error,
@@ -44,11 +46,30 @@ export const ScheduleTable = ({
   };
 
   const getImageName = (imageId: number | null) => {
-    if (!imageId) return '-';
+    if (!imageId) return null; // changed: null helps us detect if schedule is not image-based
 
     return (
       images.find((image) => image.id === imageId)?.name || String(imageId)
     );
+  };
+
+  const getCollectionName = (collectionId: number | null) => {
+    if (!collectionId) return null; // added: null helps us detect if schedule is not collection-based
+
+    return (
+      collections.find((collection) => collection.id === collectionId)?.name ||
+      String(collectionId)
+    );
+  };
+
+  const getContentLabel = (schedule: Schedule) => {
+    const imageName = getImageName(schedule.imageId); // added: try image content first
+    const collectionName = getCollectionName(schedule.collectionId); // added: try collection content second
+
+    if (imageName) return `Image: ${imageName}`; // added: image schedule label
+    if (collectionName) return `Collection: ${collectionName}`; // added: collection schedule label
+
+    return '-';
   };
 
   if (isLoading) {
@@ -80,7 +101,7 @@ export const ScheduleTable = ({
           <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
             <TableCell>Name</TableCell>
             <TableCell>Screen</TableCell>
-            <TableCell>Image</TableCell>
+            <TableCell>Content</TableCell>
             <TableCell>Start Date</TableCell>
             <TableCell>End Date</TableCell>
             <TableCell>Recurring</TableCell>
@@ -99,15 +120,18 @@ export const ScheduleTable = ({
               >
                 {schedule.name}
               </TableCell>
+
               <TableCell>{getScreenName(schedule.screenId)}</TableCell>
+
               <TableCell
                 sx={{
                   maxWidth: '200px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap', // added: better ellipsis
                 }}
               >
-                {getImageName(schedule.imageId)}
+                {getContentLabel(schedule)}
               </TableCell>
 
               <TableCell sx={{ fontSize: '0.875rem' }}>

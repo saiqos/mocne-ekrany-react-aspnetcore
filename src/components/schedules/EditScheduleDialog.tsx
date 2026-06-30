@@ -17,14 +17,17 @@ import {
   Typography,
 } from '@mui/material';
 import { useState, useEffect } from 'react';
-import type { Image, Schedule, Screen } from '../../types';
+import type { Collection, Image, Schedule, Screen } from '../../types'; // changed: added Collection type
 import type { UpdateSchedulePayload } from '../../services/schedules';
+
+type ContentType = 'image' | 'collection'; // added: schedule can use image or collection
 
 interface EditScheduleDialogProps {
   open: boolean;
   schedule: Schedule | null;
   screens: Screen[];
   images: Image[];
+  collections: Collection[]; // added: collections list for editing collection schedules
   isUpdating: boolean;
   updateSchedule: (id: number, payload: UpdateSchedulePayload) => Promise<void>;
   onClose: () => void;
@@ -35,6 +38,7 @@ export const EditScheduleDialog = ({
   schedule,
   screens,
   images,
+  collections, // added: receive collections from parent
   isUpdating,
   updateSchedule,
   onClose,
@@ -42,7 +46,9 @@ export const EditScheduleDialog = ({
   const [formData, setFormData] = useState({
     name: '',
     screenId: null as number | null,
+    contentType: 'image' as ContentType, // added: selected content type
     imageId: null as number | null,
+    collectionId: null as number | null, // added: selected collection id
     startDate: '',
     startTime: '00:00',
     endDate: '',
@@ -62,7 +68,9 @@ export const EditScheduleDialog = ({
     setFormData({
       name: schedule.name,
       screenId: schedule.screenId,
+      contentType: schedule.collectionId ? 'collection' : 'image', // added: detect existing schedule type
       imageId: schedule.imageId,
+      collectionId: schedule.collectionId, // added: load collection id
       startDate: startDate.toISOString().split('T')[0],
       startTime: startDate.toTimeString().slice(0, 5),
       endDate: endDate.toISOString().split('T')[0],
@@ -78,7 +86,9 @@ export const EditScheduleDialog = ({
     setFormData({
       name: '',
       screenId: null,
+      contentType: 'image', // added: reset content type
       imageId: null,
+      collectionId: null, // added: reset collection
       startDate: '',
       startTime: '00:00',
       endDate: '',
@@ -94,7 +104,15 @@ export const EditScheduleDialog = ({
 
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.screenId) newErrors.screenId = 'Screen is required';
-    if (!formData.imageId) newErrors.imageId = 'Image is required';
+
+    if (formData.contentType === 'image' && !formData.imageId) {
+      newErrors.imageId = 'Image is required'; // changed: image required only for image schedule
+    }
+
+    if (formData.contentType === 'collection' && !formData.collectionId) {
+      newErrors.collectionId = 'Collection is required'; // added: collection required only for collection schedule
+    }
+
     if (!formData.startDate) newErrors.startDate = 'Start date is required';
     if (!formData.endDate) newErrors.endDate = 'End date is required';
 
@@ -117,14 +135,7 @@ export const EditScheduleDialog = ({
   };
 
   const handleSubmit = async () => {
-    if (
-      !handleValidate() ||
-      !schedule ||
-      !formData.screenId ||
-      !formData.imageId
-    ) {
-      return;
-    }
+    if (!handleValidate() || !schedule || !formData.screenId) return; // changed: imageId is not always required
 
     const startDateTime = new Date(
       `${formData.startDate}T${formData.startTime}`,
@@ -137,8 +148,9 @@ export const EditScheduleDialog = ({
     await updateSchedule(schedule.id, {
       name: formData.name,
       screenId: formData.screenId,
-      imageId: formData.imageId,
-      collectionId: schedule.collectionId ?? null,
+      imageId: formData.contentType === 'image' ? formData.imageId : null, // changed: save image only for image schedule
+      collectionId:
+        formData.contentType === 'collection' ? formData.collectionId : null, // added: save collection only for collection schedule
       startDate: startDateTime,
       endDate: endDateTime,
       isRecurring: formData.isRecurring,
@@ -186,25 +198,72 @@ export const EditScheduleDialog = ({
             )}
           />
 
-          <Autocomplete
-            options={images}
-            getOptionLabel={(option) => option.name}
-            value={
-              images.find((image) => image.id === formData.imageId) || null
-            }
-            onChange={(_, value) =>
-              setFormData({ ...formData, imageId: value?.id ?? null })
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select Image"
-                error={!!errors.imageId}
-                helperText={errors.imageId}
-                disabled={isUpdating}
-              />
-            )}
-          />
+          <FormControl fullWidth>
+            <InputLabel>Content Type</InputLabel>
+
+            <Select
+              value={formData.contentType}
+              label="Content Type"
+              disabled={isUpdating}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  contentType: e.target.value as ContentType, // added: switch content type
+                  imageId: null, // added: clear image when type changes
+                  collectionId: null, // added: clear collection when type changes
+                })
+              }
+            >
+              <MenuItem value="image">Image</MenuItem>
+              <MenuItem value="collection">Collection</MenuItem>
+            </Select>
+          </FormControl>
+
+          {formData.contentType === 'image' && (
+            <Autocomplete
+              options={images}
+              getOptionLabel={(option) => option.name}
+              value={
+                images.find((image) => image.id === formData.imageId) || null
+              }
+              onChange={(_, value) =>
+                setFormData({ ...formData, imageId: value?.id ?? null })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Image"
+                  error={!!errors.imageId}
+                  helperText={errors.imageId}
+                  disabled={isUpdating}
+                />
+              )}
+            />
+          )}
+
+          {formData.contentType === 'collection' && (
+            <Autocomplete
+              options={collections}
+              getOptionLabel={(option) => option.name}
+              value={
+                collections.find(
+                  (collection) => collection.id === formData.collectionId,
+                ) || null
+              }
+              onChange={(_, value) =>
+                setFormData({ ...formData, collectionId: value?.id ?? null })
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Collection"
+                  error={!!errors.collectionId}
+                  helperText={errors.collectionId}
+                  disabled={isUpdating}
+                />
+              )}
+            />
+          )}
 
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
             <Box>
