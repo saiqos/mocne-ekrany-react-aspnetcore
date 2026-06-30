@@ -4,7 +4,9 @@ import { ScreenTable } from '../components/screens/ScreenTable';
 import { AddScreenDialog } from '../components/screens/AddScreenDialog';
 import { EditScreenDialog } from '../components/screens/EditScreenDialog';
 import { DeleteScreenDialog } from '../components/screens/DeleteScreenDialog';
+import { DisplayImageDialog } from '../components/screens/DisplayImageDialog'; // added: dialog for displaying image immediately
 import { useScreens } from '../hooks/useScreens';
+import { useImages } from '../hooks/useImages'; // added: images are needed for DisplayImageDialog
 import type { Screen } from '../types';
 
 export const ScreensPage = () => {
@@ -25,11 +27,18 @@ export const ScreensPage = () => {
 
     powerControl,
     isControllingPower,
+
+    displayImage, // added: sends image display command through backend/MQTT
+    isDisplayingImage, // added: loading state for display image command
   } = useScreens();
 
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const { images } = useImages(); // added: available images for immediate display
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [displayImageDialogOpen, setDisplayImageDialogOpen] = useState(false); // added: display image dialog state
+
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
 
   const handleEditClick = (screen: Screen) => {
@@ -40,6 +49,18 @@ export const ScreensPage = () => {
   const handleDeleteClick = (screen: Screen) => {
     setSelectedScreen(screen);
     setDeleteDialogOpen(true);
+  };
+
+  const handleDisplayImageClick = (screen: Screen) => {
+    setSelectedScreen(screen); // added: save screen for DisplayImageDialog
+    setDisplayImageDialogOpen(true); // added: open image selector dialog
+  };
+
+  const handleCloseSelectedDialog = () => {
+    setEditDialogOpen(false);
+    setDeleteDialogOpen(false);
+    setDisplayImageDialogOpen(false); // added: close display image dialog too
+    setSelectedScreen(null);
   };
 
   return (
@@ -54,8 +75,8 @@ export const ScreensPage = () => {
       >
         <Typography variant="h4">Screens</Typography>
 
-        <Button variant="contained" onClick={() => setAddDialogOpen(true)}>
-          Add Screen
+        <Button variant="contained" onClick={() => setCreateDialogOpen(true)}>
+          Create Screen
         </Button>
       </Box>
 
@@ -64,39 +85,43 @@ export const ScreensPage = () => {
         isLoading={isLoading}
         isError={isError}
         error={error}
-        powerControl={powerControl}
         isControllingPower={isControllingPower}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
+        onPowerClick={powerControl}
+        onDisplayImageClick={handleDisplayImageClick} // added: opens DisplayImageDialog
       />
 
       <AddScreenDialog
-        open={addDialogOpen}
-        createScreen={createScreen}
+        open={createDialogOpen}
         isCreating={isCreating}
-        onClose={() => setAddDialogOpen(false)}
+        createScreen={createScreen}
+        onClose={() => setCreateDialogOpen(false)}
       />
 
       <EditScreenDialog
         open={editDialogOpen}
         screen={selectedScreen}
-        updateScreen={updateScreen}
         isUpdating={isUpdating}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setSelectedScreen(null);
-        }}
+        updateScreen={updateScreen}
+        onClose={handleCloseSelectedDialog}
+      />
+
+      <DisplayImageDialog
+        open={displayImageDialogOpen}
+        screen={selectedScreen}
+        images={images}
+        isDisplayingImage={isDisplayingImage}
+        displayImage={displayImage}
+        onClose={handleCloseSelectedDialog}
       />
 
       <DeleteScreenDialog
         open={deleteDialogOpen}
         screen={selectedScreen}
-        deleteScreen={deleteScreen}
         isDeleting={isDeleting}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setSelectedScreen(null);
-        }}
+        deleteScreen={deleteScreen}
+        onClose={handleCloseSelectedDialog}
       />
     </Box>
   );

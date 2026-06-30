@@ -16,6 +16,7 @@ export const useScreens = () => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isControllingPower, setIsControllingPower] = useState(false);
+    const [isDisplayingImage, setIsDisplayingImage] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchScreens = useCallback(async () => {
@@ -87,13 +88,38 @@ export const useScreens = () => {
 
         try {
             await screenService.powerControl(id, action);
-            showSnackbar('Power control executed', 'success');
+
+            showSnackbar(
+                action === 'on'
+                    ? 'Power on command sent'
+                    : 'Power off command sent',
+                'success',
+            );
+
             await fetchScreens();
         } catch (err) {
             showSnackbar('Failed to control power', 'error');
             throw err;
         } finally {
             setIsControllingPower(false);
+        }
+    };
+
+    const displayImage = async (screenId: number, imageId: number) => {
+        setIsDisplayingImage(true);
+
+        try {
+            const response = await screenService.displayImage(screenId, {
+                imageId,
+            });
+
+            showSnackbar(response.message || 'Display image command sent', 'success');
+            await fetchScreens();
+        } catch (err) {
+            showSnackbar('Failed to display image', 'error');
+            throw err;
+        } finally {
+            setIsDisplayingImage(false);
         }
     };
 
@@ -114,6 +140,9 @@ export const useScreens = () => {
 
         powerControl,
         isControllingPower,
+
+        displayImage,
+        isDisplayingImage,
 
         refetchScreens: fetchScreens,
     };

@@ -8,11 +8,18 @@ export interface CreateScreenPayload {
     location: string;
 }
 
-export interface UpdateScreenPayload {
-    name: string;
-    uniqueIdentifier: string;
-    groupId: number | null;
-    location: string;
+export type UpdateScreenPayload = CreateScreenPayload;
+
+export interface PowerControlPayload {
+    powerOn: boolean;
+}
+
+export interface DisplayImagePayload {
+    imageId: number;
+}
+
+export interface DisplayImageResponse {
+    message: string;
 }
 
 export const screenService = {
@@ -35,7 +42,10 @@ export const screenService = {
     },
 
     update: async (id: number, payload: UpdateScreenPayload): Promise<Screen> => {
-        const response = await axiosClient.put<Screen>(`/api/screens/${id}`, payload);
+        const response = await axiosClient.put<Screen>(
+            `/api/screens/${id}`,
+            payload,
+        );
 
         return response.data;
     },
@@ -44,9 +54,26 @@ export const screenService = {
         await axiosClient.delete(`/api/screens/${id}`);
     },
 
-    powerControl: async (id: number, action: 'on' | 'off'): Promise<void> => {
-        await axiosClient.post(`/api/screens/${id}/power`, {
-            isOnline: action === 'on',
+    powerControl: async (
+        id: number,
+        action: 'on' | 'off',
+    ): Promise<Screen> => {
+        const response = await axiosClient.post<Screen>(`/api/screens/${id}/power`, {
+            powerOn: action === 'on',
         });
+
+        return response.data;
+    },
+
+    displayImage: async (
+        id: number,
+        payload: DisplayImagePayload,
+    ): Promise<DisplayImageResponse> => {
+        const response = await axiosClient.post<DisplayImageResponse>(
+            `/api/screens/${id}/display-image`,
+            payload,
+        );
+
+        return response.data;
     },
 };

@@ -1,20 +1,21 @@
 import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  IconButton,
-  Chip,
-  Box,
-  CircularProgress,
-  Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import ImageIcon from '@mui/icons-material/Image'; // added: icon for immediate image display
 import type { Screen } from '../../types';
 
 interface ScreenTableProps {
@@ -23,9 +24,10 @@ interface ScreenTableProps {
   isError: boolean;
   error: string | null;
   isControllingPower: boolean;
-  powerControl: (id: number, action: 'on' | 'off') => Promise<void>;
   onEditClick: (screen: Screen) => void;
   onDeleteClick: (screen: Screen) => void;
+  onPowerClick: (id: number, action: 'on' | 'off') => Promise<void>;
+  onDisplayImageClick: (screen: Screen) => void; // added: opens DisplayImageDialog
 }
 
 export const ScreenTable = ({
@@ -34,9 +36,10 @@ export const ScreenTable = ({
   isError,
   error,
   isControllingPower,
-  powerControl,
   onEditClick,
   onDeleteClick,
+  onPowerClick,
+  onDisplayImageClick, // added: handler for immediate image display
 }: ScreenTableProps) => {
   if (isLoading) {
     return (
@@ -62,74 +65,87 @@ export const ScreenTable = ({
         <TableHead>
           <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
             <TableCell>Name</TableCell>
-            <TableCell>ID</TableCell>
+            <TableCell>Unique Identifier</TableCell>
             <TableCell>Location</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Last Seen</TableCell>
+            <TableCell>Created At</TableCell>
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
 
         <TableBody>
-          {screens.map((screen) => (
-            <TableRow key={screen.id}>
-              <TableCell sx={{ fontWeight: 500 }}>{screen.name}</TableCell>
+          {screens.map((screen) => {
+            const isOnline = screen.status === 'Online';
 
-              <TableCell sx={{ fontSize: '0.875rem', color: '#666' }}>
-                {screen.uniqueIdentifier}
-              </TableCell>
+            return (
+              <TableRow key={screen.id}>
+                <TableCell sx={{ fontWeight: 500 }}>{screen.name}</TableCell>
 
-              <TableCell>{screen.location || '-'}</TableCell>
+                <TableCell>{screen.uniqueIdentifier}</TableCell>
 
-              <TableCell>
-                <Chip
-                  label={screen.status}
-                  color={screen.status === 'Online' ? 'success' : 'default'}
-                  size="small"
-                />
-              </TableCell>
+                <TableCell>{screen.location || '-'}</TableCell>
 
-              <TableCell sx={{ fontSize: '0.875rem' }}>
-                {screen.lastSeen
-                  ? new Date(screen.lastSeen).toLocaleString()
-                  : 'Never'}
-              </TableCell>
+                <TableCell>
+                  <Chip
+                    label={screen.status}
+                    size="small"
+                    color={isOnline ? 'success' : 'default'}
+                  />
+                </TableCell>
 
-              <TableCell align="right" sx={{ display: 'flex', gap: '5px' }}>
-                <IconButton
-                  size="small"
-                  onClick={() =>
-                    powerControl(
-                      screen.id,
-                      screen.status === 'Online' ? 'off' : 'on',
-                    )
-                  }
-                  disabled={isControllingPower}
-                  color="primary"
-                  title={screen.status === 'Online' ? 'Turn off' : 'Turn on'}
-                >
-                  <PowerSettingsNewIcon />
-                </IconButton>
+                <TableCell sx={{ fontSize: '0.875rem' }}>
+                  {screen.lastSeen
+                    ? new Date(screen.lastSeen).toLocaleString()
+                    : '-'}
+                </TableCell>
 
-                <IconButton
-                  size="small"
-                  onClick={() => onEditClick(screen)}
-                  title="Edit"
-                >
-                  <EditIcon />
-                </IconButton>
+                <TableCell sx={{ fontSize: '0.875rem' }}>
+                  {new Date(screen.createdAt).toLocaleString()}
+                </TableCell>
 
-                <IconButton
-                  size="small"
-                  onClick={() => onDeleteClick(screen)}
-                  title="Delete"
-                  color="error"
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
+                <TableCell align="right">
+                  <IconButton
+                    size="small"
+                    onClick={() => onDisplayImageClick(screen)}
+                    title="Display image now"
+                    color="primary"
+                  >
+                    <ImageIcon />
+                  </IconButton>
+
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      onPowerClick(screen.id, isOnline ? 'off' : 'on')
+                    }
+                    title={isOnline ? 'Power off' : 'Power on'}
+                    color={isOnline ? 'warning' : 'success'}
+                    disabled={isControllingPower}
+                  >
+                    <PowerSettingsNewIcon />
+                  </IconButton>
+
+                  <IconButton
+                    size="small"
+                    onClick={() => onEditClick(screen)}
+                    title="Edit screen"
+                  >
+                    <EditIcon />
+                  </IconButton>
+
+                  <IconButton
+                    size="small"
+                    onClick={() => onDeleteClick(screen)}
+                    title="Delete screen"
+                    color="error"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>
